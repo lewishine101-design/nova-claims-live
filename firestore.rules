@@ -1,0 +1,244 @@
+rules_version = '2';
+
+// Nova Claims: permanent rules for the nova-claims-system project.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function verified() {
+      return signedIn()
+        && request.auth.token.get('email_verified', false) == true
+        && request.auth.token.get('email', '') is string
+        && request.auth.token.get('email', '') != '';
+    }
+
+    function email() {
+      return request.auth.token.get('email', '').lower();
+    }
+
+    function staff() {
+      return verified() && email().matches('^[^@]+@tbrn[.]co[.]uk$');
+    }
+
+    // Support both current claims and the original formData format.
+    function field(data, key, fallback) {
+      let value = data.get(key, data.get('formData', {}).get(key, fallback));
+      return value == null || value == '' ? fallback : value;
+    }
+
+    function containsEmail(value) {
+      return (value is string && email() in value.lower().split('[,;\\s<>]+'))
+        || (value is list && email() in value);
+    }
+
+    function assigned(data) {
+      return verified() && (
+        containsEmail(field(data, 'assignedContractor', ''))
+        || containsEmail(data.get('assignedContractorEmail', ''))
+        || containsEmail(data.get('assignedContractorEmailLower', ''))
+        || containsEmail(data.get('contractorEmail', ''))
+        || containsEmail(data.get('contractorEmails', ''))
+        || containsEmail(data.get('assignedToEmail', ''))
+        || containsEmail(data.get('assignedTo', ''))
+        || containsEmail(data.get('assignedEmail', ''))
+      );
+    }
+
+    function teamName(data, key) {
+      return field(data, key, '').trim();
+    }
+
+    function coreDetails(data) {
+      let form = data.get('formData', {});
+      let type = data.get('claimType', form.get('claimType', 'Impact Damage'));
+      return [
+        data.get('claimRef', form.get('claimRef', '')),
+        data.get('claimantName', form.get('claimantName', '')),
+        data.get('propertyAddress', form.get('propertyAddress', '')),
+        type == '' || type == null ? 'Impact Damage' : type,
+        data.get('assignedContractor', form.get('assignedContractor', '')),
+        teamName(data, 'tbrnClaimsConcierge'),
+        teamName(data, 'tbrnReviewerSurveyor')
+      ];
+    }
+
+    // Current saves always include these root/form fields; only the stored
+    // legacy record needs fallback and normalization.
+    function currentDetails(data) {
+      return [data.claimRef, data.claimantName, data.propertyAddress,
+        data.claimType, data.assignedContractor,
+        data.tbrnClaimsConcierge, data.tbrnReviewerSurveyor];
+    }
+
+    function completeTeam(data) {
+      let concierge = teamName(data, 'tbrnClaimsConcierge');
+      let reviewer = teamName(data, 'tbrnReviewerSurveyor');
+      return concierge is string && reviewer is string
+        && concierge.size() <= 120 && reviewer.size() <= 120
+        && concierge.matches('.*\\S.*') && reviewer.matches('.*\\S.*');
+    }
+
+    function staffTeamUpdate(before, after) {
+      return completeTeam(after) || (
+        teamName(before, 'tbrnClaimsConcierge') == ''
+        && teamName(before, 'tbrnReviewerSurveyor') == ''
+        && teamName(after, 'tbrnClaimsConcierge') == ''
+        && teamName(after, 'tbrnReviewerSurveyor') == ''
+      );
+    }
+
+    function stage(data) {
+      let value = field(data, 'scheduleStatus', 'Draft').trim().lower();
+      return {
+        'draft': 'Draft',
+        'assigned to contractor': 'Assigned To Contractor',
+        'in progress': 'In Progress',
+        'contractor complete': 'Contractor Schedule Complete',
+        'contractor schedule complete': 'Contractor Schedule Complete',
+        'tbrn approved': 'TBRN Approved Schedule',
+        'tbrn approved schedule': 'TBRN Approved Schedule',
+        'repair complete': 'Repair Complete'
+      }.get(value, value);
+    }
+
+    function contractorStage(from, to) {
+      return from == to
+        || (from == 'Assigned To Contractor'
+          && to in ['In Progress', 'Contractor Schedule Complete'])
+        || (from == 'In Progress' && to == 'Contractor Schedule Complete')
+        || (from == 'TBRN Approved Schedule' && to == 'Repair Complete');
+    }
+
+    function lockedScheduleUnchanged(before, after, from) {
+      return !(from in [
+        'Contractor Schedule Complete', 'TBRN Approved Schedule', 'Repair Complete'
+      ]) || (after.get('schedule', []) == before.get('schedule', [])
+        && float(after.regionalVariance) ==
+          float(field(before, 'regionalVariance', before.get('uplift', 0)))
+        && float(after.vat) == float(field(before, 'vat', 20)));
+    }
+
+    function completionCode(before, after, to) {
+      let oldCode = before.get('scheduleCopyCode', '');
+      let newCode = after.get('scheduleCopyCode', '');
+      return oldCode != '' ? (
+        newCode == oldCode
+        && after.get('scheduleCopyCodeCreatedAt', '') ==
+          before.get('scheduleCopyCodeCreatedAt', '')
+      ) : (
+        newCode == '' || (
+          newCode is string
+          && newCode.matches('^NOVA-([0-9A-F]{6}-){3}[0-9A-F]{6}$')
+          && to in [
+            'Contractor Schedule Complete', 'TBRN Approved Schedule', 'Repair Complete'
+          ]
+          && after.get('schedule', []).size() > 0
+        )
+      );
+    }
+
+    // Explicitly allow the fields written by the current scheduling app.
+    // Unknown fields and all contractor-assignment aliases remain protected.
+    function contractorFields(before, after) {
+      return after.diff(before).affectedKeys().hasOnly([
+        'version', 'savedAt', 'cpp', 'cppData', 'formData',
+        'claimRef', 'claimantName', 'propertyAddress', 'claimType',
+        'assignedContractor', 'tbrnClaimsConcierge', 'tbrnReviewerSurveyor',
+        'claimRefLower', 'claimantNameLower', 'propertyAddressLower',
+        'assignedContractorLower', 'totals', 'claimId', 'updatedBy',
+        'updatedAt', 'createdAt', 'novaRevision', 'surveyorNotes',
+        'regionalVariance', 'regionalVariancePreset', 'vat',
+        'rooms', 'roomDimensions', 'schedule', 'scheduleStatus',
+        'scheduleCopyCode', 'scheduleCopyCodeCreatedAt',
+        'previousScheduleStatus', 'lastStatusChangedBy', 'lastStatusChangedAt'
+      ]) && after.get('formData', {}).diff(before.get('formData', {}))
+        .affectedKeys().hasOnly([
+          'claimRef', 'claimantName', 'propertyAddress', 'claimType',
+          'assignedContractor', 'tbrnClaimsConcierge', 'tbrnReviewerSurveyor',
+          'scheduleStatus', 'surveyorNotes', 'regionalVariance',
+          'regionalVariancePreset', 'vat',
+          'cppPrincipalContractor', 'cppSiteManager', 'cppPreparedBy',
+          'cppStartDate', 'cppCompletionDate', 'cppWorkingHours',
+          'cppEmergencyContact', 'cppClientContact', 'cppWelfare',
+          'cppAccess', 'cppDeliveries', 'cppSiteRules', 'cppHazards',
+          'cppPpe', 'cppContractorSignature', 'cppClientSignature', 'cppSignoffDate'
+        ]);
+    }
+
+    function contractorUpdate(before, after, claimId) {
+      let details = currentDetails(after);
+      let from = stage(before);
+      let to = after.scheduleStatus;
+      return assigned(before)
+        && contractorFields(before, after)
+        && details == coreDetails(before)
+        && currentDetails(after.formData) == details
+        && after.get('claimId', '') == claimId
+        && after.get('claimRefLower', '') == after.get('claimRef', '').trim().lower()
+        && after.get('claimantNameLower', '') == after.get('claimantName', '').trim().lower()
+        && after.get('propertyAddressLower', '') == after.get('propertyAddress', '').trim().lower()
+        && after.get('assignedContractorLower', '') == after.get('assignedContractor', '').trim().lower()
+        && after.get('updatedBy', '').lower() == email()
+        && after.get('updatedAt', null) == request.time
+        && after.get('createdAt', null) == before.get('createdAt', request.time)
+        && after.get('novaRevision', 0) == before.get('novaRevision', 0) + 1
+        && after.get('schedule', null) is list
+        && contractorStage(from, to)
+        && after.formData.scheduleStatus == to
+        && lockedScheduleUnchanged(before, after, from)
+        && completionCode(before, after, to);
+    }
+
+    match /claims/{claimId} {
+      // Staff may also read a missing reference before creating it in a transaction.
+      allow get: if staff() || assigned(resource.data);
+      allow list: if staff();
+      allow create: if staff() && completeTeam(request.resource.data);
+      allow update: if (staff() && staffTeamUpdate(resource.data, request.resource.data))
+        || (resource != null && contractorUpdate(resource.data, request.resource.data, claimId));
+      allow delete: if staff();
+    }
+
+    // Profile roles are display data; they never grant access to claims.
+    match /users/{userId} {
+      function ownProfile() {
+        return signedIn() && request.auth.uid == userId;
+      }
+      function validProfile() {
+        return request.resource.data.get('email', '').lower() == email()
+          && request.resource.data.get('role', '') in ['staff', 'contractor']
+          && (request.resource.data.get('role', '') != 'staff'
+            || email().matches('^[^@]+@tbrn[.]co[.]uk$'));
+      }
+      allow get: if ownProfile() || staff();
+      allow list, delete: if staff();
+      allow create: if staff() || (ownProfile() && validProfile()
+        && request.resource.data.keys().hasOnly([
+          'email', 'role', 'contractorName', 'createdAt', 'lastLoginAt'
+        ]));
+      allow update: if staff() || (ownProfile() && validProfile()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'email', 'role', 'contractorName', 'lastLoginAt'
+        ]));
+    }
+
+    match /contractors/{contractorId} {
+      allow read, write: if staff();
+    }
+
+    match /rates/{rateId} {
+      allow read: if verified();
+      allow write: if staff();
+    }
+
+    match /settings/{settingId} {
+      allow read, write: if staff();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
