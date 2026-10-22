@@ -15,7 +15,7 @@ function start(payload=fixture){
  const storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>{if(storageFail)throw Error('Storage unavailable');saved.set(k,v);},removeItem:k=>saved.delete(k)};
  const window={addEventListener(){},print(){prints.push({html:el('printArea').innerHTML,title:document.title});},scrollTo(){},innerWidth:1280};
  const context=vm.createContext({document,window,location:{search:'',href:'https://example.test/'},localStorage:storage,sessionStorage:{getItem:()=>null,setItem(){}},navigator:{clipboard:{writeText:async()=>{}}},crypto:crypto.webcrypto,URL,URLSearchParams,TextEncoder,Intl,Date,Uint8Array,setTimeout:()=>1,clearTimeout(){},confirm:()=>true,console});
- const hooks=' api.__check={normalise,claim,active,payload,stamp,archiveSchedule,scheduleVersionInfo,scheduleVersionLabel,scheduleHistory,canEditSchedule,validateScheduleVersions,liveValidation,reportHtml,scheduleVersionsPanel,buildDuplicatePayload,validatePayload,formInput,getPending:()=>pendingDuplicate,setUser:u=>{user=u;},setLive:l=>{live=l;},store:()=>store};\n return api;';
+ const hooks=' api.__check={normalise,claim,active,payload,stamp,archiveSchedule,scheduleVersionInfo,scheduleVersionLabel,scheduleHistory,canEditSchedule,validateScheduleVersions,liveValidation,reportHtml,scheduleVersionsPanel,buildDuplicatePayload,validatePayload,formInput,scheduleChangeData,changeReportHtml,changeReportOptions,getChangeReport:()=>pendingChangeReport,getPending:()=>pendingDuplicate,setUser:u=>{user=u;},setLive:l=>{live=l;},store:()=>store};\n return api;';
  vm.runInContext(app.replace(' return api;',hooks).replace('N.init();',''),context);
  const N=window.N,T=N.__check;
  const F={doc:()=>({id:'TEST-SOURCE'}),serverTimestamp:()=>({seconds:clock++,nanoseconds:0}),runTransaction:async(_db,fn)=>{let pending;await fn({get:async()=>({exists:()=>liveData!==null,data:()=>copy(liveData)}),set:(_ref,value)=>{pending=copy(value);}});if(pending){liveData=pending;commits++;}},getDoc:async()=>({data:()=>copy(liveData)}),collection:()=>({}),where:(_k,_op,value)=>({code:value}),limit:()=>({}),query:(...args)=>args,getDocs:async query=>({size:liveData&&query.some(q=>q.code===liveData.scheduleCopyCode)?1:0,docs:liveData&&query.some(q=>q.code===liveData.scheduleCopyCode)?[{data:()=>copy(liveData)}]:[]})};
@@ -27,7 +27,8 @@ function start(payload=fixture){
 const checks=[];function check(name,fn){fn();checks.push(name);}
 async function variation(env,reason='Extra work exposed during repairs.'){env.N.variationDialog();env.el('variationReason').value=reason;await env.N.startVariation();}
 async function status(env,value){env.N.statusDialog();env.el('nextStatus').value=value;await env.N.updateStatus();}
-(async()=>{
+module.exports={start,fixture,variation,status};
+if(require.main===module)(async()=>{
  const e=start();e.connect();const before=e.getLive();
  check('Legacy approved claim defaults to original version without inventing history',()=>{assert.equal(e.T.scheduleVersionInfo().number,1);assert.equal(e.T.scheduleHistory().length,0);assert.equal(e.T.canEditSchedule(),false);});
  await variation(e,'');check('Variation needs a reason and creates nothing when blank',()=>{assert.equal(e.T.scheduleVersionInfo().number,1);assert.equal(e.commits(),0);});
