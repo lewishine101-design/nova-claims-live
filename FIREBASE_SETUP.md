@@ -17,6 +17,10 @@ Publishing GitHub Pages updates the app only. It does not publish Firestore rule
 
 ## Access
 
+After signing in, TBRN staff can open **All claims** to search the shared live claim list by full or partial reference, claimant, address or postcode. The staff view defaults to **All live claims**; results are not restricted to the claim creator, concierge, reviewer or assigned contractor. **Find claim** opens this shared search, and **Refresh** retrieves the latest list.
+
+**Local drafts** are only stored in the current browser. Use **Save to live** before other staff can find a new claim from another computer.
+
 - Verified `@tbrn.co.uk` accounts have staff access to all claims, contractor records, rates and settings.
 - Verified contractor accounts can open assigned claims by reference and save permitted schedule changes. They cannot list all claims, create/delete claims, reassign contractors, edit the TBRN team or access the contractor directory.
 - New live claims require both TBRN assignments. Existing records that predate both fields can still be saved; once assigned, both roles must stay populated.
