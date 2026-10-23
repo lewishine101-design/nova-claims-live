@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Nova-Scheduling-System",
+  "short_name": "Nova Scheduling",
+  "description": "TBRN claims and repair scheduling workspace.",
+  "lang": "en-GB",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#17343b",
+  "background_color": "#f8faf8",
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "./icons/app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
