@@ -20,6 +20,7 @@ function setup(account=staff){
   getDocs:async ref=>{calls.push({method:'list',ref});if(listGate)await listGate;if(listError)throw listError;return {docs:Object.keys(db).map(snapshot)};},
   getDoc:async ref=>{calls.push({method:'get',ref});if(readGate)await readGate;return snapshot(ref.id);}
  };
+ F.getDocFromServer=F.getDoc;F.getDocsFromServer=F.getDocs;
  e.T.setLive({F,db:{}});e.T.setUser(account);e.T.applySessionAccess();
  return {...e,calls,db,listError:v=>{listError=v;},listGate:v=>{listGate=v;},readGate:v=>{readGate=v;},login:u=>{e.T.setUser(u);e.T.applySessionAccess();}};
 }

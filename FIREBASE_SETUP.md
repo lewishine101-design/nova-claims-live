@@ -80,13 +80,21 @@ No additional Firestore rules publication is needed for this read-only integrati
 
 Live claims remain in Firestore; local drafts and the current rate-library overrides remain in browser storage and backups. This change does not add central synchronisation of browser rate overrides. Signing out hides claim/report content but does not encrypt or erase local drafts.
 
+### One saved entry per live claim
+
+Opening a live claim refreshes its existing local copy by its exact Firestore document ID. It no longer appends another copy on each open. The **Saved on this device** list and recent claims show one entry per live document, using the most recent confirmed copy. Extra clean cached copies from older app versions are consolidated when signing in or reopening/saving the live claim. Separate document IDs and independent local drafts are not merged merely because they have the same reference.
+
+Unsaved edits are preserved and grouped under **Local drafts** for their claim. They can be reviewed and opened explicitly. Opening the regular claim entry requests the current server version, so an earlier **Ready for review** copy does not replace the subsequently approved schedule. A network or storage failure keeps the saved work and reports the failure; it does not silently open a stale copy as the latest live claim. Existing concurrency and approval checks continue to prevent a stale draft overwriting newer live work.
+
+Schedule history and variations remain inside the live claim, unchanged. This repair changes local caching and display; it does not delete or merge live Firestore documents and requires no rules update.
+
 The dedicated login page, Remember me, password recovery, email verification, claim links, schedule versions and change reports remain available. Verification/reset messages are sent only through the existing Firebase actions; a successful request does not confirm delivery.
 
 If a management user has no `users/{uid}` profile because an older signup failed to save it, that account can still use its protected role. To make it appear in the staff list, the Firebase owner can add a profile using the same UID with string fields `email` (the account email) and `role` (`staff`). Do not put access levels in profile authority fields.
 
 ## Validation
 
-213 application checks passed. The unchanged Firestore rules have 121 passing emulator checks from the staff-level release. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation, contractor isolation, Hub matching, live updates, stale responses and connection failures. Application test claims and profiles are synthetic; no production claims were changed and no real emails were sent. The separate read-only live Hub check used a temporary anonymous session, removed afterwards. The Firebase rules publication was confirmed by the project owner; it has not been independently inspected, and authenticated Scheduling browser verification still requires an Admin account.
+237 application checks passed. The unchanged Firestore rules have 121 passing emulator checks from the staff-level release. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation, contractor isolation, Hub matching, live updates, stale responses and connection failures. The claim-cache regression reproduces contractor submission followed by approval in separate synthetic browsers, repeated opens, legacy cached duplicates, draft preservation and stale-write rejection. Application test claims and profiles are synthetic; no production claims were changed and no real emails were sent. The separate read-only live Hub check used a temporary anonymous session, removed afterwards. The Firebase rules publication was confirmed by the project owner; it has not been independently inspected, and authenticated Scheduling browser verification still requires an Admin account.
 
 Official Firebase guidance: [manage and deploy rules](https://firebase.google.com/docs/rules/manage-deploy), [rules propagation](https://firebase.google.com/docs/firestore/security/get-started), and [manage Firestore data in the console](https://firebase.google.com/docs/firestore/using-console).
 
