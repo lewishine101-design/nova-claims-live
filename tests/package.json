@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@firebase/rules-unit-testing": "^5.0.0",
+    "firebase": "^12.14.0",
+    "firebase-tools": "^13.29.2"
+  },
+  "private": true,
+  "scripts": {
+    "test": "node run-app-tests.cjs",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-tbrn-staff-roles --config ../firebase.json \"node run-role-rules.cjs\""
+  }
+}

@@ -1,0 +1,62 @@
+// Isolated role, auth and claim tests. No production connections or real emails.
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const {start,fixture,variation,status}=require('./schedule-versions.cjs');
+const copy=x=>JSON.parse(JSON.stringify(x));
+const hooks=`Object.assign(api.__check,{canAccess,canManage,canView,canAdmin,canBuildSchedules,canEditCpp,loadStaffAccess,staffLevel,staffLevelLabel,staffAccessView,staffSignupField,conciergeWrite,conciergeProtected,validateConciergeSave,newPayload,render,detailsView,scheduleView,ratesView,dataView,canEdit,receiveBackup,ensureCompletionCode,getRole:()=>staffAccess,getAccounts:()=>staffAccounts,getRates:()=>rateList,setProfile:p=>{profile=p;},setPage:p=>{page=p;},getPage:()=>page,setupSignup:()=>{authMode='signup';authRole='staff';},getRoleRequest:()=>authStaffLevel});`;
+const inProgress={...copy(fixture),scheduleStatus:'In Progress'};
+const checks=[];
+function check(name,fn){fn();checks.push(name);}
+function form(e,key,value,kind='field'){e.T.formInput({type:'change',target:{matches:s=>s==='[data-'+kind+']',dataset:{[kind]:key},type:'text',value}});}
+function accessMock(e){
+ let server=()=>Promise.resolve({exists:()=>false}),listener,listenerError,reads=0,stops=0;
+ const F={doc:(_db,collection,id)=>({collection,id}),getDocFromServer:ref=>{reads++;return server(ref);},onSnapshot:(_ref,_options,success,error)=>{listener=success;listenerError=error;return ()=>{stops++;};}};
+ e.T.setLive({F,db:{}});
+ return {server:fn=>{server=fn;},push:data=>listener(data),fail:()=>listenerError(),reads:()=>reads,stops:()=>stops};
+}
+const snap=(level,email='staff@tbrn.co.uk',metadata={})=>({exists:()=>true,data:()=>({email,level}),metadata});
+(async()=>{
+ const c=start(inProgress,hooks);c.connect();c.asStaff('concierge');
+ check('Concierges can see every claim and the directory, and edit claim administration',()=>{assert(c.T.canAccess({...fixture,assignedContractor:'somebody-else@example.test'}));assert(c.T.canView('contractors'));assert(c.T.canManage());assert(c.T.canEdit());assert(!c.T.canEditSchedule());assert(!c.T.canEditCpp());assert(!c.T.canView('staff'));});
+ const before=copy(c.T.claim()),rates=copy(c.T.getRates());
+ c.editQty('99');c.N.variance(30);c.N.duplicateLine(0);c.N.removeLine(0);c.N.addManual();c.N.undo();c.N.redo();c.N.clearSchedule();c.N.roomDialog();c.N.addRate(0);c.N.toggleRateAdmin();c.N.editRate(0);c.N.saveRate(0);
+ form(c,'vat','99');form(c,'surveyorNotes','Changed');form(c,'cppSiteManager','Changed','cpp');form(c,'scheduleStatus','TBRN Approved Schedule');
+ await status(c,'TBRN Approved Schedule');await variation(c);c.N.duplicateDialog();c.N.createDuplicateClaim();c.N.importBackup();await c.T.receiveBackup({text:async()=>JSON.stringify({schedule:[{qty:999,rate:999}]})});c.N.commitImport();c.N.recoverLegacy();
+ check('Direct mutation, status, import, duplicate and rate actions are blocked for concierges',()=>{assert.deepEqual(copy(c.T.claim()),before);assert.deepEqual(copy(c.T.getRates()),rates);assert.equal(c.commits(),0);assert.equal(c.T.store().claims.length,1);});
+ form(c,'claimantName','Updated claimant');form(c,'tbrnClaimsConcierge','New concierge');assert.equal(await c.N.saveLive(),true);
+ check('Concierges save details and assignments while preserving schedule precision and history',()=>{assert.equal(c.getLive().claimantName,'Updated claimant');assert.equal(c.getLive().tbrnClaimsConcierge,'New concierge');assert.deepEqual(c.getLive().schedule,before.schedule);assert.equal(c.getLive().schedule[0].rate,19.34567);});
+ c.T.claim().schedule[0].qty=1000;assert.equal(await c.N.saveLive(),false);
+ check('A tampered schedule cannot be smuggled through a concierge metadata save',()=>assert.equal(c.getLive().schedule[0].qty,12.5));
+ const old={formData:{claimRef:'OLD',claimantName:'Old name',propertyAddress:'Old address',tbrnClaimsConcierge:'Concierge',tbrnReviewerSurveyor:'Surveyor',scheduleStatus:'TBRN Approved Schedule',vat:'20',surveyorNotes:'Stored legacy note',cppWelfare:'Legacy welfare'},schedule:[{description:'Original legacy item',quantity:'4.5',rate:'12.345678',notes:'Original note',roomName:'Old room'}],rooms:['Old room'],unknownLegacy:{retain:true},novaRevision:2,updatedAt:{seconds:100},createdAt:{seconds:90}};
+ const legacy=start(old,hooks);legacy.connect();legacy.setLive(old);legacy.T.active().remote={id:'OLD',ref:'OLD',stamp:legacy.T.stamp(old)};legacy.asStaff('concierge');form(legacy,'claimantName','New legacy name');assert.equal(await legacy.N.saveLive(),true);const legacySaved=legacy.getLive();
+ check('Legacy metadata saves preserve raw line aliases, strings, CPP, unknown fields and missing code/history',()=>{assert.deepEqual(legacySaved.schedule,old.schedule);assert.equal(legacySaved.formData.vat,'20');assert.equal(legacySaved.formData.cppWelfare,'Legacy welfare');assert.deepEqual(legacySaved.unknownLegacy,old.unknownLegacy);assert.equal(legacySaved.scheduleCopyCode,undefined);assert.equal(legacySaved.scheduleHistory,undefined);assert(!legacy.T.active().dirty);assert.notEqual(legacy.T.active().remote.stamp,'needs-reload');});
+ form(legacy,'propertyAddress','New legacy address');assert.equal(await legacy.N.saveLive(),true);check('A second concierge save remains valid after legacy reconciliation',()=>assert.deepEqual(legacy.getLive().schedule,old.schedule));
+ const fresh=start(inProgress,hooks);fresh.connect();fresh.asStaff('concierge');fresh.N.newClaim();fresh.setLive(null);form(fresh,'claimRef','NEW');form(fresh,'tbrnClaimsConcierge','Concierge');form(fresh,'tbrnReviewerSurveyor','Surveyor');assert.equal(await fresh.N.saveLive(),true);const newBlank=fresh.getLive();
+ check('Concierges can create blank claims with both staff assignments',()=>{assert.deepEqual(newBlank.schedule,[]);assert.equal(newBlank.scheduleStatus,'Draft');assert.equal(newBlank.tbrnReviewerSurveyor,'Surveyor');assert.equal(newBlank.scheduleHistory,undefined);});
+ form(fresh,'claimantName','Second save');assert.equal(await fresh.N.saveLive(),true);check('New blank claims can be saved repeatedly without rewriting defaults',()=>assert.equal(fresh.getLive().claimantName,'Second save'));
+ const s=start(inProgress,hooks);s.connect();s.asStaff('surveyor');s.editQty('22');assert.equal(await s.N.saveLive(),true);await status(s,'TBRN Approved Schedule');await variation(s);
+ check('Surveyors can build, approve and vary schedules while retaining the original',()=>{assert.equal(s.getLive().scheduleVersion.number,2);assert.equal(s.getLive().scheduleHistory.length,1);assert.equal(s.getLive().scheduleHistory[0].payload.schedule[0].qty,22);assert(s.T.canEditSchedule());assert(!s.T.canAdmin());});
+ s.N.toggleRateAdmin();s.N.saveRate(0);check('Surveyors cannot change library rates or manage staff',()=>{assert.deepEqual(copy(s.T.getRates()),rates);assert(!s.T.canView('staff'));});
+ s.asStaff();check('Management has full schedule, rate and staff-management access',()=>{assert(s.T.canAdmin());assert(s.T.canBuildSchedules());assert(s.T.canView('staff'));s.N.toggleRateAdmin();assert(s.T.ratesView().includes('Exit rate admin'));s.N.account();assert(s.el('dialog').innerHTML.includes('Admin / Management'));});
+ s.asContractor();check('Contractors retain assigned-claim access without directory, staff page or new claims',()=>{assert(s.T.canAccess(s.T.claim()));assert(s.T.canEditSchedule());assert(!s.T.canManage());assert(!s.T.canView('contractors'));assert(!s.T.canView('staff'));});
+ const load=start(inProgress,hooks),mock=accessMock(load);load.T.setUser({uid:'staff-test',email:'staff@tbrn.co.uk',emailVerified:true});load.T.setProfile({role:'admin',level:'admin',requestedStaffLevel:'admin'});
+ check('Unconfirmed permissions and self-selected profile roles grant no edit access',()=>{assert(!load.T.canManage());assert(!load.T.canBuildSchedules());assert(!load.T.canAdmin());assert(load.T.canAccess(fixture));});
+ await load.T.loadStaffAccess();check('A server-confirmed missing role defaults to Concierge only',()=>{assert.equal(load.T.staffLevel(),'concierge');assert(!load.T.canBuildSchedules());assert(load.T.canManage());});
+ mock.push(snap('admin'));check('A valid protected role record enables management access',()=>assert(load.T.canAdmin()));
+ mock.push(snap('concierge'));check('Live downgrades immediately remove schedule editing and management actions',()=>{assert(!load.T.canAdmin());assert(!load.T.canEditSchedule());});
+ mock.push(snap('admin','staff@tbrn.co.uk',{fromCache:true}));mock.push(snap('admin','staff@tbrn.co.uk',{hasPendingWrites:true}));check('Cached or uncommitted role snapshots cannot elevate permissions',()=>assert.equal(load.T.staffLevel(),'concierge'));
+ mock.fail();check('A permission listener failure pauses writes but leaves viewing available',()=>{assert(!load.T.canManage());assert(!load.T.canBuildSchedules());assert(load.T.canAccess(fixture));assert(load.T.getRole().error);});
+ mock.server(()=>Promise.resolve(snap('admin','different@tbrn.co.uk')));await load.N.retryStaffAccess();check('Role documents bound to another email are rejected',()=>assert(!load.T.canAdmin()));
+ mock.server(()=>Promise.reject(new Error('denied')));await load.N.retryStaffAccess();check('A server permission error fails closed',()=>assert(!load.T.canManage()));
+ let finish;mock.server(()=>new Promise(resolve=>{finish=resolve;}));const pending=load.T.loadStaffAccess(true);load.T.setUser({uid:'other',email:'other@tbrn.co.uk',emailVerified:true});finish(snap('admin'));await pending;
+ check('An old account response cannot grant access after switching users',()=>{assert(!load.T.canManage());assert(!load.T.canAdmin());});
+ const signup=start(inProgress,hooks);signup.T.setupSignup();check('Registration offers the three staff levels as requests with manager approval explained',()=>{const content=signup.T.staffSignupField();for(const label of ['Claims Concierge','Surveyor / Reviewer','Admin / Management','manager approves'])assert(content.includes(label));});
+ const ui=start(inProgress,hooks);ui.asStaff('concierge');check('Concierge screens omit privileged actions and label schedules as view-only',()=>{assert(!ui.T.detailsView().includes('N.statusDialog'));assert(!ui.T.scheduleVersionsPanel().includes('N.statusDialog'));assert(!ui.T.scheduleView().includes('N.manualDialog'));assert(!ui.T.ratesView().includes('N.toggleRateAdmin'));assert(!ui.T.dataView().includes('N.importBackup'));assert(ui.T.scheduleView().includes('view schedules'));ui.N.account();assert(ui.el('dialog').innerHTML.includes('Claims Concierge'));});
+ const manager=start(inProgress,hooks);manager.asStaff();const writes=[];
+ const profiles=[{id:'member',data:()=>({id:'spoofed',email:'member@tbrn.co.uk',requestedStaffLevel:'surveyor'})},{id:'staff-test',data:()=>({email:'staff@tbrn.co.uk'})},{id:'contractor',data:()=>({email:'builder@example.test'})}];
+ const F={collection:(_db,name)=>({name}),doc:(_db,collection,id)=>({collection,id}),serverTimestamp:()=>({seconds:123}),getDocsFromServer:async ref=>({docs:ref.name==='users'?profiles:[]}),runTransaction:async(_db,callback)=>callback({get:async()=>({exists:()=>true,data:()=>({email:'member@tbrn.co.uk'})}),set:(ref,data)=>writes.push({ref,data})})};manager.T.setLive({F,db:{}});await manager.N.loadStaffAccounts();
+ check('Management lists staff requests and uses document UIDs instead of editable profile fields',()=>{assert.equal(manager.T.getAccounts().length,2);assert.equal(manager.T.getAccounts()[0].id,'member');assert(manager.T.staffAccessView().includes('Surveyor / Reviewer'));});
+ manager.el('staffLevel0').value='surveyor';await manager.N.saveStaffLevel(0);check('Management saves the approved role separately from the requested profile level',()=>{assert.equal(writes.length,1);assert.equal(writes[0].ref.collection,'staffAccess');assert.equal(writes[0].ref.id,'member');assert.equal(writes[0].data.level,'surveyor');assert.equal(writes[0].data.updatedBy,'staff-test');});
+ manager.el('staffLevel1').value='concierge';await manager.N.saveStaffLevel(1);manager.asStaff('surveyor');await manager.N.saveStaffLevel(0);check('Self-demotion and non-management role changes cannot be submitted',()=>assert.equal(writes.length,1));
+ if(process.argv[3])fs.writeFileSync(process.argv[3],JSON.stringify({newBlank,legacyBefore:old,legacyAfter:legacySaved},null,2));
+ console.log(JSON.stringify({passed:checks.length,checks,productionDataTouched:false},null,2));
+})().catch(e=>{console.error(e);process.exitCode=1;});

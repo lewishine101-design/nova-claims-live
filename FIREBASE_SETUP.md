@@ -1,43 +1,76 @@
-# TBRN claims workspace — Firebase setup
+# TBRN staff access — activation
 
-Live app: https://lewishine101-design.github.io/nova-claims-live/
+The staff-level update is prepared for release. It is **not active in production** until the rules and app are both published. A Firebase plugin is not required.
 
-## Publish the replacement rules
+Use the existing **nova-claims-system** project. The separate contractor-map project is outside this change.
 
-The previous Firestore test-mode rule expired on 12 July 2026. The replacement `firestore.rules` removes the date limit and enforces the app permissions.
+## 1. Set the first management account
 
-1. Open the Firebase console and select **nova-claims-system**.
-2. Open **Firestore Database → Rules**.
-3. Replace the entire editor contents with `firestore.rules` from this repository.
-4. Choose **Publish**. Allow up to a minute for new requests to use the new rules.
-5. Refresh the live app and sign in. If asked, select **Send verification email**, follow its link, then return and select **I’ve verified my email**.
-6. For a new claim, enter both the **TBRN Claims Concierge** and **TBRN Reviewer/Surveyor** in **Assignment & progress**, then choose **Save to live**.
+Open [the Firebase project](https://console.firebase.google.com/project/nova-claims-system/overview) in your normal browser with the Google account that manages this project.
 
-Publishing GitHub Pages updates the app only. It does not publish Firestore rules. These rules must be published in Firebase separately. They target the `nova-claims-system` database, not the separate contractor-map project.
+1. Open **Authentication → Users**. Find the existing TBRN account that should manage staff access and copy its **User UID**. Use a verified `@tbrn.co.uk` account.
+2. Open **Firestore Database → Data** and select the default database.
+3. Add a collection named **staffAccess**. For the document ID, paste that exact User UID; do not use Auto ID.
+4. Add these two fields, both with type **string**, then save:
 
-## Login home
+| Field | Value |
+| --- | --- |
+| `email` | That account’s exact TBRN sign-in email, in lowercase |
+| `level` | `admin` |
 
-The live app opens on a dedicated TBRN sign-in page. It supports staff and contractor sign-in, account creation, password recovery, and email verification. Existing accounts continue to use the same Firebase Authentication project.
+This one-time step must be done by the Firebase project owner. Selecting management on the registration form only requests access; it cannot approve the request.
 
-- **Remember me** keeps Firebase sign-in across browser restarts. Leave it unticked on shared computers; otherwise the session lasts for the current browser session.
-- A verified remembered account restores directly into the workspace. During restoration, claim content stays hidden. Connection failures show a retry action.
-- Emailed `?claimRef=` links open the linked claim after successful sign-in and verification, subject to the account’s claim permissions.
-- Signing out returns to the login page and clears displayed claim/report content. Existing local drafts remain in browser storage; this UI change does not encrypt or erase the local cache.
-- Verification and password-reset messages are requested through Firebase only when the user selects the corresponding button. Request acceptance does not confirm email delivery.
+If other existing staff must keep schedule-editing access immediately, add a document for each of their Authentication UIDs with their email and `level` set to `surveyor` or `admin`. Verified TBRN accounts without a role document receive Claims Concierge access after activation.
 
-The login page does not replace Firestore rules. Publish and verify the database rules separately as described above.
+## 2. Publish the database rules and release the app
 
-## Access
+Coordinate these steps in one release window. Existing staff should save their work first. The older app does not understand the new levels and may show actions the new rules reject.
 
-After signing in, TBRN staff can open **All claims** to search the shared live claim list by full or partial reference, claimant, address or postcode. The staff view defaults to **All live claims**; results are not restricted to the claim creator, concierge, reviewer or assigned contractor. **Find claim** opens this shared search, and **Refresh** retrieves the latest list.
+1. In **Firestore Database → Rules**, save a copy of the currently published rules for reference. The deployed rules have not been verified from this development environment.
+2. Open [firestore.rules](./firestore.rules) from this update. Copy the entire file, replace the rules editor contents, and click **Publish**.
+3. Tell Codex that the first management account is set up and the rules are published. The prepared staff-access branch can then be released to the main app. Publishing the app does not publish Firebase rules automatically.
+4. Once the app release is complete, reload it and sign in with the management account. Open **Staff access**, review the requested levels, choose the appropriate level, and select **Save access** for each staff member.
+5. Check the account label, all-claim search, and permissions using one account of each level. Rules changes can take up to a minute for new requests and up to ten minutes for existing listeners; reload/sign in again for this check.
 
-**Local drafts** are only stored in the current browser. Use **Save to live** before other staff can find a new claim from another computer.
+These rules do not rewrite existing claims, rates, saved versions or contractor records. The release uses the existing Firebase Authentication accounts.
 
-- Verified `@tbrn.co.uk` accounts have staff access to all claims, contractor records, rates and settings.
-- Verified contractor accounts can open assigned claims by reference and save permitted schedule changes. They cannot list all claims, create/delete claims, reassign contractors, edit the TBRN team or access the contractor directory.
-- New live claims require both TBRN assignments. Existing records that predate both fields can still be saved; once assigned, both roles must stay populated.
-- Contractors cannot approve schedules, reopen submitted schedules, change submitted schedule items/pricing or replace an issued copy code.
-- Display roles in user profiles do not grant access. Email verification is required before live claims can be read or saved.
-- Existing claim records are not rewritten by publishing these rules.
+## Permissions
 
-The live app retains the original rate values and claim compatibility fields. Rules and application checks were exercised locally with test records; no production claim writes or contractor emails were used during validation.
+| Capability | Claims Concierge | Surveyor / Reviewer | Admin / Management |
+| --- | --- | --- | --- |
+| Search and view all claims, schedules, rates, reports and saved versions | Yes | Yes | Yes |
+| View the contractor directory | Yes | Yes | Yes |
+| Create blank claims; edit claimant/property details and assignments | Yes | Yes | Yes |
+| Build/amend schedules, room dimensions, pricing and construction plans | No | Yes | Yes |
+| Submit/approve schedules; start variations; duplicate or import schedules | No | Yes | Yes |
+| Edit/import the rate library | No | No | Yes |
+| Approve/change staff access | No | No | Yes |
+| Delete live claims or change database system settings | No | No | Yes |
+
+Concierges may assign a Draft claim to a contractor; subsequent schedule status changes require a Surveyor / Reviewer or management. New claims still require both a TBRN Claims Concierge and TBRN Reviewer/Surveyor in the assignment section.
+
+Contractors retain their existing access to assigned claims and permitted schedule changes. They cannot create claims, list all claims, change assignments, access the contractor directory or manage staff.
+
+## How staff levels are protected
+
+- `users/{uid}.requestedStaffLevel` records the registration request only. Existing display roles in profiles grant no permissions.
+- `staffAccess/{uid}` holds the approved `email` and `level`. Database rules restrict changes to management and bind each role to the account UID and email.
+- Role changes made in the app also record `updatedBy` and `updatedAt`. An administrator cannot demote or remove their own role through the app.
+- The app checks roles with Firebase before enabling staff edits and listens for changes. If verification fails, editing pauses while viewing remains available.
+- Concierge saves write only claim administration fields. Existing schedules, aliases, precision, construction plans and history remain unchanged. The database also rejects direct attempts to bypass these restrictions.
+
+## Existing storage and sign-in behaviour
+
+Live claims remain in Firestore; local drafts and the current rate-library overrides remain in browser storage and backups. This change does not add central synchronisation of browser rate overrides. Signing out hides claim/report content but does not encrypt or erase local drafts.
+
+The dedicated login page, Remember me, password recovery, email verification, claim links, schedule versions and change reports remain available. Verification/reset messages are sent only through the existing Firebase actions; a successful request does not confirm delivery.
+
+If a management user has no `users/{uid}` profile because an older signup failed to save it, that account can still use its protected role. To make it appear in the staff list, the Firebase owner can add a profile using the same UID with string fields `email` (the account email) and `role` (`staff`). Do not put access levels in profile authority fields.
+
+## Validation
+
+145 application checks and 121 Firestore-emulator checks passed. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation and contractor isolation. All test claims and accounts are synthetic; no production claims were changed and no real emails were sent. Production rules deployment and authenticated browser verification are still required.
+
+Official Firebase guidance: [manage and deploy rules](https://firebase.google.com/docs/rules/manage-deploy), [rules propagation](https://firebase.google.com/docs/firestore/security/get-started), and [manage Firestore data in the console](https://firebase.google.com/docs/firestore/using-console).
+
+To repeat the application checks, run `node tests/run-app-tests.cjs` from the repository root. For database checks, run `npm ci` in `tests`, then `npm run test:rules`. The rules suite uses only the `demo-tbrn-*` emulator projects and requires Java. These commands do not deploy anything.
