@@ -1,0 +1,19 @@
+{
+  "clientTests": {
+    "schedule-versions": 25,
+    "schedule-changes": 26,
+    "staff-access": 21,
+    "login-home": 25,
+    "pwa": 14,
+    "email-preview": 8,
+    "staff-roles": 26
+  },
+  "clientTotal": 145,
+  "firestoreTests": {
+    "staffRoles": 94,
+    "staffAccess": 16,
+    "scheduleVersions": 11
+  },
+  "originalDataUnchanged": true,
+  "liveFirebaseDeployment": false
+}
