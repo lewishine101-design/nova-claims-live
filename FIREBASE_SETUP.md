@@ -55,6 +55,19 @@ Contractors retain their existing access to assigned claims and permitted schedu
 
 Admin / Management accounts have a **Contractor access** tab directly below **Staff access**. It lists registered contractor profiles, supports searching by company or sign-in email, and shows the live claims assigned to a selected account. Open a claim from that list to review or change its assignment. The tab and its actions are unavailable to other access levels. This page uses the existing permissions and does not require another rules update.
 
+### Live Hub contact details and availability
+
+Contractor access reads contact email addresses, phone numbers, availability and on-hold notes from the TBRN Hub. Edit these in the Hub; server-confirmed changes appear automatically while the Contractor access page is open. Search also includes Hub contact emails, phone numbers and availability.
+
+- The source is project `tbrn-live-intranet`, document `tbrnSharedState/state`. The reader extracts `tbrn-directory-2-general` and `tbrn-directory-emergency-specialist` from the shared `values` map. The legacy emergency key is used only when the current key is absent. Surveyor and other Hub data is not retained.
+- A separate named Firebase app uses the Hub's existing anonymous authentication flow with in-memory persistence. Scheduling does not write Hub records or copy them into the claims database or browser storage. The Hub's existing security rules govern this connection; Scheduling staff-role rules do not apply to the separate Hub project.
+- Accounts match by an exact contact email, or by a unique normalised company name when no email matches. Duplicate/conflicting matches and missing matches are shown explicitly. A Hub listing does not register a Scheduling account.
+- The four statuses remain distinct: **Available**, **On hold**, **On hold (limited services)** and **On hold (INS & LBG)**. Legacy `hold` and `taking` values are supported. Unrecognised statuses require checking in the Hub.
+- The sign-in email and existing claim assignments are not changed by a contact or availability update. On hold is an allocation status, not an account suspension. The existing Contractor directory/map integration is unchanged by this account-page feature.
+- Cached snapshots are not described as live. Connection failures show a retry action and label any retained in-memory details as last confirmed. Leaving the page, changing account or losing Admin access closes the listener and clears these details.
+
+No additional Firestore rules publication is needed for this read-only integration. The Hub read path was checked against its existing live data; authenticated Scheduling browser verification still requires an Admin account.
+
 ## How staff levels are protected
 
 - `users/{uid}.requestedStaffLevel` records the registration request only. Existing display roles in profiles grant no permissions.
@@ -73,7 +86,7 @@ If a management user has no `users/{uid}` profile because an older signup failed
 
 ## Validation
 
-168 application checks passed. The unchanged Firestore rules have 121 passing emulator checks from the staff-level release. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation and contractor isolation. All test claims and accounts are synthetic; no production claims were changed and no real emails were sent. Production rules deployment and authenticated browser verification are still required.
+213 application checks passed. The unchanged Firestore rules have 121 passing emulator checks from the staff-level release. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation, contractor isolation, Hub matching, live updates, stale responses and connection failures. Application test claims and profiles are synthetic; no production claims were changed and no real emails were sent. The separate read-only live Hub check used a temporary anonymous session, removed afterwards. The Firebase rules publication was confirmed by the project owner; it has not been independently inspected, and authenticated Scheduling browser verification still requires an Admin account.
 
 Official Firebase guidance: [manage and deploy rules](https://firebase.google.com/docs/rules/manage-deploy), [rules propagation](https://firebase.google.com/docs/firestore/security/get-started), and [manage Firestore data in the console](https://firebase.google.com/docs/firestore/using-console).
 

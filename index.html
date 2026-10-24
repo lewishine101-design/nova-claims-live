@@ -37,6 +37,7 @@
 
 .role-notice{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.role-matrix td{white-space:normal}.role-matrix th:first-child{width:200px}
 .sidebar{overflow-y:auto}.contractor-account-email{overflow-wrap:anywhere}
+.contractor-hub-notice{margin-bottom:18px;align-items:center;justify-content:space-between;gap:16px}.contractor-hub-notice>div{min-width:0}.contractor-hub-notes{white-space:pre-wrap;margin-top:7px;max-width:280px;overflow-wrap:anywhere}#contractorAccountRows td{vertical-align:top}#contractorAccountRows .badge{white-space:normal}
 </style>
 </head>
 <body class="auth-screen">
@@ -216,17 +217,122 @@ const N = (() => {
  function staffAccessNotice(){return isStaff()&&!staffReady()?`<div class="notice warn role-notice" role="status"><span>${esc(staffAccess.error||'Checking your staff permissions. Editing will be available when confirmed.')}</span>${staffAccess.error?btn('Try again','N.retryStaffAccess()','refresh','sm'):''}</div>`:'';}
  function staffLevelOptions(selected){return Object.entries(staffLevels).map(([value,label])=>`<option value="${value}" ${selected===value?'selected':''}>${label}</option>`).join('');}
  function staffSignupField(){return `<div class="field" id="staffLevelField" ${authMode==='signup'&&authRole==='staff'?'':'hidden'}><label for="requestedStaffLevel">Staff access level</label><select id="requestedStaffLevel" name="requestedStaffLevel">${staffLevelOptions(authStaffLevel)}</select><p class="login-field-help">A manager approves Surveyor / Reviewer and Admin / Management access. Until approved, verified staff have Claims Concierge access.</p></div>`;}
+ // Read-only Hub contact feed. Login identity and claim assignments remain in Scheduling.
+ const contractorHubConfig={apiKey:'AIzaSyCQJiugjtDKf2HnQbx2sy29EdI4jGXVDeI',authDomain:'tbrn-live-intranet.firebaseapp.com',projectId:'tbrn-live-intranet',storageBucket:'tbrn-live-intranet.firebasestorage.app',messagingSenderId:'106825657812',appId:'1:106825657812:web:795df14b84c1e1c0f77a41'};
+ const contractorHubDirectories=[['tbrn-directory-2-general'],['tbrn-directory-emergency-specialist','tbrn-directory-2-1-emergency-specialist']];
+ const contractorHubStatusLabels={active:'Available',hold:'On hold',limited:'On hold (limited services)',ins_lbg:'On hold (INS & LBG)',unknown:'Check status in Hub'};
+ let contractorHubRecords=[],contractorHubState='idle',contractorHubError='',contractorHubCheckedAt='',contractorHubEpoch=0,contractorHubStop=null;
+ function stopContractorHub(){
+  contractorHubEpoch++;if(contractorHubStop){contractorHubStop();contractorHubStop=null;}
+  contractorHubRecords=[];contractorHubState='idle';contractorHubError='';contractorHubCheckedAt='';
+ }
+ function contractorHubStatus(entry){
+  const status=lower(entry.status);
+  if(status==='ins_lbg')return 'ins_lbg';
+  if(status==='limited'||status==='taking')return 'limited';
+  if(status==='hold'||entry.hold===true||entry.hold==='true')return 'hold';
+  return !status||status==='active'?'active':'unknown';
+ }
+ function parseContractorHub(raw){
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('The Hub contact data is unavailable.');
+  const values=raw.values||raw.data||raw.state||raw.sharedState||raw;
+  if(!values||typeof values!=='object'||Array.isArray(values))throw Error('The Hub contact data is unavailable.');
+  let found=false;const records=[];
+  for(const aliases of contractorHubDirectories){
+   const key=aliases.find(key=>Object.prototype.hasOwnProperty.call(values,key));if(!key)continue;
+   found=true;let entries=values[key];if(typeof entries==='string')entries=JSON.parse(entries);
+   if(!Array.isArray(entries))throw Error('The Hub contractor directory could not be read.');
+   for(const entry of entries){
+    if(!entry||typeof entry!=='object'||Array.isArray(entry))throw Error('The Hub contractor directory contains an invalid contact.');
+    if(entry.deleted===true)continue;
+    const name=String(entry.name||'').trim();if(!name)continue;
+    records.push({id:key+':'+String(entry.id||records.length),name,email:String(entry.email||'').trim(),phone:String(entry.phone||'').trim(),status:contractorHubStatus(entry),onHoldNotes:String(entry.onHoldNotes||'').trim()});
+   }
+  }
+  if(!found)throw Error('No shared contractor directory was found in the Hub.');
+  // Identical cards can occur in both General and Emergency & Specialist.
+  const unique=new Map();for(const record of records){const key=JSON.stringify([norm(record.name),emails(record.email).sort(),record.phone.replace(/\s+/g,''),record.status,record.onHoldNotes]);if(!unique.has(key))unique.set(key,record);}
+  return [...unique.values()].sort((a,b)=>a.name.localeCompare(b.name,'en-GB'));
+ }
+ function contractorHubMatch(entry){
+  if(!canAdmin())return {state:'unavailable',record:null};
+  if(!contractorHubCheckedAt)return {state:contractorHubState==='error'?'unavailable':'loading',record:null};
+  const email=lower(entry.email),name=norm(entry.contractorName);
+  let matches=contractorHubRecords.filter(record=>emails(record.email).includes(email));
+  let method='email';
+  if(matches.length>1&&name){const named=matches.filter(record=>norm(record.name)===name);if(named.length)matches=named;}
+  if(!matches.length&&name){matches=contractorHubRecords.filter(record=>norm(record.name)===name);method='company';}
+  if(matches.length!==1)return {state:matches.length?'ambiguous':'unmatched',record:null};
+  return {state:'matched',record:matches[0],method};
+ }
+ function contractorHubContact(entry){
+  const match=contractorHubMatch(entry),record=match.record;
+  if(!record)return `<span class="small muted">${match.state==='loading'?'Checking Hub…':match.state==='ambiguous'?'Multiple Hub matches — check the company and email.':match.state==='unmatched'?'No matching Hub contact':'Hub contact unavailable'}</span>`;
+  const addresses=emails(record.email),phone=record.phone.replace(/[^+0-9]/g,'');
+  return `<div class="contractor-account-email">${addresses.length?addresses.map(email=>`<a href="mailto:${esc(email)}">${esc(email)}</a>`).join('<br>'):esc(record.email||'No email recorded in Hub')}</div><div class="small">${record.phone?(phone?`<a href="tel:${esc(phone)}">${esc(record.phone)}</a>`:esc(record.phone)):'No phone recorded in Hub'}</div><div class="row-subtitle">${esc(record.name)} · Matched by ${match.method==='company'?'company name':'email'}</div>`;
+ }
+ function contractorHubAvailability(entry){
+  const record=contractorHubMatch(entry).record;
+  if(!record)return '<span class="badge">Not confirmed</span>';
+  return `<span class="badge ${record.status==='active'&&contractorHubState==='live'?'sage':'amber'}">${esc(contractorHubStatusLabels[record.status])}</span>${record.onHoldNotes?`<div class="small contractor-hub-notes">${esc(record.onHoldNotes)}</div>`:''}${contractorHubState!=='live'?'<div class="row-subtitle">Last confirmed status</div>':''}`;
+ }
+ function contractorHubNotice(){
+  if(!canAdmin())return '';
+  const connected=contractorHubState==='live',pending=['idle','loading'].includes(contractorHubState);
+  const label=connected?'TBRN Hub connected':pending?'Connecting to TBRN Hub…':contractorHubState==='cached'?'TBRN Hub connection interrupted':'TBRN Hub unavailable';
+  const detail=connected?'Contact details and availability update automatically from the Hub.':contractorHubError||'Waiting for the Hub to confirm its latest contact details and availability.';
+  return `<div class="notice ${connected?'':'warn'} contractor-hub-notice" role="status"><div><strong>${label}</strong><div>${esc(detail)}</div>${contractorHubCheckedAt?`<div class="small">Last confirmed: ${esc(time(contractorHubCheckedAt))}${!connected?' · Displaying the last confirmed details.':''}</div>`:''}</div>${!pending?btn(connected?'Refresh Hub':'Retry Hub','N.refreshContractorHub()','refresh','sm'):''}</div>`;
+ }
+ function updateContractorHubView(){
+  if(!canAdmin()||page!=='contractor-access')return;
+  const notice=byId('contractorHubNotice');if(notice)notice.innerHTML=contractorHubNotice();
+  contractorAccessSearch(contractorAccountsQuery);
+ }
+ async function startContractorHub(force=false){
+  if(!canAdmin()||page!=='contractor-access'||!live)return false;
+  if(!force&&(contractorHubStop||contractorHubState==='loading'))return false;
+  const request=++contractorHubEpoch,account=user;
+  if(contractorHubStop){contractorHubStop();contractorHubStop=null;}
+  contractorHubState='loading';contractorHubError='';updateContractorHubView();
+  const current=()=>request===contractorHubEpoch&&account===user&&canAdmin()&&page==='contractor-access';
+  const fail=message=>{if(!current())return;contractorHubState='error';contractorHubError=message;updateContractorHubView();};
+  try{
+   const {App,A,F}=live;
+   // A separate app/auth instance never changes the Scheduling user's sign-in.
+   const app=App.getApps().find(app=>app.name==='schedulingContractorHub')||App.initializeApp(contractorHubConfig,'schedulingContractorHub');
+   const auth=A.getAuth(app);await A.setPersistence(auth,A.inMemoryPersistence);if(!current())return false;
+   if(!auth.currentUser)await A.signInAnonymously(auth);if(!current())return false;
+   const ref=F.doc(F.getFirestore(app),'tbrnSharedState','state');
+   const stop=F.onSnapshot(ref,{includeMetadataChanges:true},snapshot=>{
+    if(!current())return;
+    if(snapshot.metadata?.fromCache||snapshot.metadata?.hasPendingWrites){contractorHubState='cached';contractorHubError='Waiting for a live Hub connection. Availability has not been reconfirmed.';updateContractorHubView();return;}
+    try{
+     if(!snapshot.exists())throw Error('No shared contractor directory was found in the Hub.');
+     const records=parseContractorHub(snapshot.data());
+     contractorHubRecords=records;contractorHubCheckedAt=now();contractorHubState='live';contractorHubError='';updateContractorHubView();
+    }catch{fail('The Hub contractor directory could not be read. Retry, or check the directory in the Hub.');}
+   },()=>fail('The Hub connection could not be confirmed. Check your connection and retry.'));
+   if(!current()){stop();return false;}contractorHubStop=stop;return true;
+  }catch{fail('Could not connect to the Hub. Check your connection and retry.');return false;}
+ }
+ function refreshContractorHub(){return startContractorHub(true);}
+ function refreshContractorAccess(){if(!canAdmin()||page!=='contractor-access')return;return Promise.all([loadContractorAccounts(),refreshContractorHub()]);}
+ function contractorAccountSearchText(entry){
+  const record=contractorHubMatch(entry).record;
+  return norm([entry.contractorName,entry.email,record?.name,record?.email,record?.phone,record?contractorHubStatusLabels[record.status]:''].join(' '));
+ }
+
  // Admin-only account review. Contractor claim access continues to follow assignments.
  let contractorAccounts=[],contractorAccountsState='idle',contractorAccountsError='',contractorAccountsQuery='',contractorAccountsRequest=0;
  let contractorAccessSelection=null,contractorAccessClaims=[],contractorAccessClaimsState='idle',contractorAccessClaimsError='',contractorAccessClaimsRequest=0;
  function clearContractorClaimSelection(){contractorAccessClaimsRequest++;contractorAccessSelection=null;contractorAccessClaims=[];contractorAccessClaimsState='idle';contractorAccessClaimsError='';}
- function clearContractorAccess(){contractorAccountsRequest++;contractorAccounts=[];contractorAccountsState='idle';contractorAccountsError='';contractorAccountsQuery='';clearContractorClaimSelection();}
+ function clearContractorAccess(){stopContractorHub();contractorAccountsRequest++;contractorAccounts=[];contractorAccountsState='idle';contractorAccountsError='';contractorAccountsQuery='';clearContractorClaimSelection();}
  function contractorAccountRows(){
   if(!canAdmin())return '';
   if(contractorAccountsState==='loading')return '<tr><td colspan="5" role="status">Loading contractor accounts…</td></tr>';
   if(contractorAccountsState==='error')return `<tr><td colspan="5"><div class="notice warn" role="alert">${esc(contractorAccountsError)}</div>${btn('Try again','N.loadContractorAccounts()','refresh','sm')}</td></tr>`;
-  const query=norm(contractorAccountsQuery),rows=contractorAccounts.map((entry,index)=>({entry,index})).filter(({entry})=>!query||norm(entry.contractorName+' '+entry.email).includes(query));
-  return rows.map(({entry,index})=>`<tr><td><strong>${esc(entry.contractorName||'Contractor account')}</strong></td><td class="contractor-account-email">${esc(entry.email)}</td><td><span class="badge">Assigned claims only</span></td><td>${time(entry.createdAt)}</td><td>${btn(contractorAccessSelection?.id===entry.id?'Refresh claims':'View claims',`N.viewContractorAccess(${index})`,'file','sm')}</td></tr>`).join('')||`<tr><td colspan="5">${empty(query?'No matching contractor accounts':'No contractor accounts yet',query?'Try a company name or email address.':'Contractors appear here after they register an account.',query?btn('Clear search',"N.contractorAccessSearch('')",'search','sm'):'','people')}</td></tr>`;
+  const query=norm(contractorAccountsQuery),rows=contractorAccounts.map((entry,index)=>({entry,index})).filter(({entry})=>!query||contractorAccountSearchText(entry).includes(query));
+  return rows.map(({entry,index})=>`<tr><td><strong>${esc(entry.contractorName||'Contractor account')}</strong><div class="row-subtitle">Registered ${time(entry.createdAt)}</div></td><td class="contractor-account-email">${esc(entry.email)}<div class="row-subtitle">Assigned claims only</div></td><td>${contractorHubContact(entry)}</td><td>${contractorHubAvailability(entry)}</td><td>${btn(contractorAccessSelection?.id===entry.id?'Refresh claims':'View claims',`N.viewContractorAccess(${index})`,'file','sm')}</td></tr>`).join('')||`<tr><td colspan="5">${empty(query?'No matching contractor accounts':'No contractor accounts yet',query?'Try a company name, email address, phone number or status.':'Contractors appear here after they register an account.',query?btn('Clear search',"N.contractorAccessSearch('')",'search','sm'):'','people')}</td></tr>`;
  }
  function contractorAssignedSection(){
   if(!canAdmin()||!contractorAccessSelection)return '';
@@ -236,15 +342,15 @@ const N = (() => {
  }
  function contractorAccessView(){
   if(!canAdmin())return '';
-  return head('Contractor access','Review registered contractor accounts and their assigned claims.',`<button onclick="N.loadContractorAccounts()" ${contractorAccountsState==='loading'?'disabled':''}>${icon('refresh')}Refresh</button>`)+
+  return head('Contractor access','Review contractor accounts, Hub contacts and availability.',`<button onclick="N.refreshContractorAccess()" ${contractorAccountsState==='loading'?'disabled':''}>${icon('refresh')}Refresh</button>`)+
    `<div class="notice role-notice">${icon('lock')}<span>Contractors can access their assigned claims. They cannot create new claims, open the contractor directory or manage staff access.</span></div>`+
-   `<section class="card"><div class="card-head"><div><h2>Contractor accounts</h2><p id="contractorAccountCount" role="status">${contractorAccounts.length} registered accounts</p></div></div><div class="toolbar"><div class="searchbox">${icon('search')}<input id="contractorAccountSearch" type="search" aria-label="Search contractor accounts" placeholder="Search company or email…" value="${esc(contractorAccountsQuery)}" oninput="N.contractorAccessSearch(this.value)"></div></div><div class="table-container"><table><thead><tr><th>Contractor</th><th>Sign-in email</th><th>Access</th><th>Registered</th><th></th></tr></thead><tbody id="contractorAccountRows">${contractorAccountRows()}</tbody></table></div></section>`+contractorAssignedSection();
+   `<div id="contractorHubNotice">${contractorHubNotice()}</div><section class="card"><div class="card-head"><div><h2>Contractor accounts</h2><p id="contractorAccountCount" role="status">${contractorAccounts.length} registered accounts</p></div></div><div class="toolbar"><div class="searchbox">${icon('search')}<input id="contractorAccountSearch" type="search" aria-label="Search contractor accounts" placeholder="Search company, email, phone or status…" value="${esc(contractorAccountsQuery)}" oninput="N.contractorAccessSearch(this.value)"></div></div><div class="table-container"><table><thead><tr><th>Contractor</th><th>Sign-in email</th><th>Hub contact details</th><th>Hub availability</th><th></th></tr></thead><tbody id="contractorAccountRows">${contractorAccountRows()}</tbody></table></div></section><p class="small muted">Update contact details and availability in the TBRN Hub. Hub availability does not change sign-in details or access to existing assigned claims.</p>`+contractorAssignedSection();
  }
  function contractorAccessSearch(value){
   if(!canAdmin()||page!=='contractor-access')return;
   contractorAccountsQuery=String(value||'');const input=byId('contractorAccountSearch');if(input&&input.value!==contractorAccountsQuery)input.value=contractorAccountsQuery;
   const rows=byId('contractorAccountRows');if(rows)rows.innerHTML=contractorAccountRows();
-  const query=norm(contractorAccountsQuery),count=contractorAccounts.filter(entry=>!query||norm(entry.contractorName+' '+entry.email).includes(query)).length;
+  const query=norm(contractorAccountsQuery),count=contractorAccounts.filter(entry=>!query||contractorAccountSearchText(entry).includes(query)).length;
   const label=byId('contractorAccountCount');if(label)label.textContent=contractorAccountsState==='loading'?'Loading accounts…':contractorAccountsState==='error'?'Accounts unavailable':`${count} of ${contractorAccounts.length} registered accounts`;
  }
  async function loadContractorAccounts(){
@@ -388,7 +494,7 @@ const N = (() => {
  function head(title,sub,buttons=''){return `<div class="page-head"><div><div class="eyebrow" style="margin-bottom:8px">${page==='overview'||page==='contractor-access'||!canAccess(claim())?'YOUR WORKSPACE':esc(claim().claimRef||'UNTITLED CLAIM')}</div><h1>${title}</h1><p>${sub}</p></div><div class="actions">${buttons}</div></div>`;}
  const btn=(text,action,ico='',style='')=>`<button class="${style}" onclick="${action}">${ico?icon(ico):''}${text}</button>`;
  function saveButton(){return `<button id="liveSaveButton" class="primary" onclick="N.saveLive()">${icon(user?'cloud':'save')}${liveBusy?'Saving…':user?'Save to live':'Save draft'}</button>`;}
- function nav(view){if(!verifiedEmail()||restoringSession){render();return;}if(!navItems.some(n=>n[0]===view)&&view!=='data')view='overview';if(!canView(view)){toast('Your account does not have access to this page.',true);return;}if(page==='contractor-access'&&view!==page)clearContractorClaimSelection();page=view;menu(false);render();if(view==='staff')loadStaffAccounts();window.scrollTo({top:0,behavior:'instant'});try{sessionStorage.setItem('novaViewV5',view);}catch{}}
+ function nav(view){if(!verifiedEmail()||restoringSession){render();return;}if(!navItems.some(n=>n[0]===view)&&view!=='data')view='overview';if(!canView(view)){toast('Your account does not have access to this page.',true);return;}if(page==='contractor-access'&&view!==page){clearContractorClaimSelection();stopContractorHub();}page=view;menu(false);render();if(view==='staff')loadStaffAccounts();window.scrollTo({top:0,behavior:'instant'});try{sessionStorage.setItem('novaViewV5',view);}catch{}}
  function viewLabel(view){return view==='claims'&&isStaff()?'All claims':navItems.find(n=>n[0]===view)?.[2]||'Data & backup';}
  function top(){byId('connectionBadge').innerHTML=`<i class="dot ${user?'live':''}"></i><span>${esc(user?'Live connected':liveState)}</span>`;byId('accountLabel').textContent=user?user.email:'Sign in';byId('avatar').textContent=user?user.email.slice(0,2).toUpperCase():'NC';byId('mainNav').innerHTML=navItems.filter(n=>canView(n[0])).map(n=>`<button class="nav-item ${page===n[0]?'active':''}" data-view="${n[0]}" onclick="N.nav('${n[0]}')">${icon(n[1])}${viewLabel(n[0])}${n[0]==='rates'?`<span class="nav-count">${rateList.length}</span>`:n[0]==='schedule'&&canAccess(claim())?`<span class="nav-count">${claim().schedule.length}</span>`:''}</button>`).join('');document.querySelectorAll('[data-view="data"]').forEach(b=>b.classList.toggle('active',page==='data'));byId('breadcrumb').textContent=viewLabel(page);}
 
@@ -399,7 +505,7 @@ const N = (() => {
   document.querySelectorAll('[id^="pcRate"],[id^="rateQty"]').forEach(el=>el.disabled=true);
  }
 
- function render(){if(restoringSession||!verifiedEmail()){renderAuthHome();return;}showAuthSurface(false);byId('authHome').innerHTML='';if(!canView(page))page='overview';ensureCompletionCode();top();const views={overview:overviewView,claims:claimsView,details:detailsView,schedule:scheduleView,rates:ratesView,contractors:contractorsView,report:reportView,cpp:cppView,data:dataView,staff:staffAccessView,'contractor-access':contractorAccessView},needsClaim=claimViews.has(page)&&!canAccess(claim());byId('content').innerHTML=staffAccessNotice()+(needsClaim?head('Open an assigned claim','Find your claim by reference to work on its schedule.',btn('Find claim','N.findClaim()','search','primary'))+empty('No assigned claim is open','Your account can work on claims assigned to your email address.',btn('My claims',"N.nav('claims')",'file')):views[page]())+footer();icons();updateSaveHint();applyRoleControls();if(page==='rates'&&!needsClaim)renderRateRows();if(page==='contractors')renderContractorRows();if(page==='claims')renderClaimRows();if(page==='contractor-access'){contractorAccessSearch(contractorAccountsQuery);if(contractorAccountsState==='idle')loadContractorAccounts();}}
+ function render(){if(restoringSession||!verifiedEmail()){renderAuthHome();return;}showAuthSurface(false);byId('authHome').innerHTML='';if(!canView(page))page='overview';ensureCompletionCode();top();const views={overview:overviewView,claims:claimsView,details:detailsView,schedule:scheduleView,rates:ratesView,contractors:contractorsView,report:reportView,cpp:cppView,data:dataView,staff:staffAccessView,'contractor-access':contractorAccessView},needsClaim=claimViews.has(page)&&!canAccess(claim());byId('content').innerHTML=staffAccessNotice()+(needsClaim?head('Open an assigned claim','Find your claim by reference to work on its schedule.',btn('Find claim','N.findClaim()','search','primary'))+empty('No assigned claim is open','Your account can work on claims assigned to your email address.',btn('My claims',"N.nav('claims')",'file')):views[page]())+footer();icons();updateSaveHint();applyRoleControls();if(page==='rates'&&!needsClaim)renderRateRows();if(page==='contractors')renderContractorRows();if(page==='claims')renderClaimRows();if(page==='contractor-access'){contractorAccessSearch(contractorAccountsQuery);if(contractorAccountsState==='idle')loadContractorAccounts();if(contractorHubState==='idle')startContractorHub();}}
  function empty(title,desc,action='',ico='file'){return `<div class="empty"><div class="empty-icon">${icon(ico)}</div><h3>${title}</h3><p>${desc}</p>${action}</div>`;}
  function steps(){const current=statuses.indexOf(claim().scheduleStatus);return `<div class="progress-track">${statusShort.map((s,i)=>`<div class="progress-step ${i<current?'done':i===current?'current':''}"><i></i><span>${i+1}. ${s}</span></div>`).join('')}</div>`;}
  function metric(label,value,note,ico,feature=false){return `<div class="card metric ${feature?'feature':''}"><span class="metric-icon">${icon(ico)}</span><label>${label}</label><strong>${value}</strong><small>${note}</small></div>`;}
@@ -868,7 +974,7 @@ const N = (() => {
  window.addEventListener('storage',e=>{if(e.key===KEY&&!localTabConflict){localTabConflict=true;toast('This workspace changed in another tab. Download a backup before continuing so both copies are kept.',true);}});
  function reconnect(){return restoreSession();}
  function init(){initAppShell();try{page=sessionStorage.getItem('novaViewV5')||'overview';}catch{}if(!navItems.some(n=>n[0]===page)&&page!=='data')page='overview';restoringSession=hasSavedSession();render();persist();if(migrated&&verifiedEmail())toast('Previous local schedules recovered.');if(restoringSession)return restoreSession();}
- const api={loadContractorAccounts,contractorAccessSearch,viewContractorAccess,retryContractorClaims,closeContractorAccess,openContractorAccessClaim,retryStaffAccess,loadStaffAccounts,saveStaffLevel,init,nav,menu,close,help,account,setAuthMode,authRoleChanged,togglePassword,resetPassword,signIn,signOut,reconnect,restoreSession,sendVerification,checkVerification,saveLive,findClaim,searchClaim,newClaim,openLocal,removeLocal,loadLiveClaims,openLiveIndex,claimScope:setClaimScope,claimSearch,claimSort:setClaimSort,setRoom,roomDialog,saveRoom,deleteRoom,ratesForRoom,manualDialog,addManual,removeLine,duplicateLine,moveLine,moveLineTo,undo,redo,clearSchedule,variance,rateSearch,rateTrade,rateFavorites,rateNext,setRateRoom,favorite,addRate,toggleRateAdmin,editRate,saveRate,contractorSearch,contractorFilter,contractorDialog,saveContractor,assignDialog,assignContractor,assignmentEmail,copyEmail,openEmail,reportMode,printReport,previewCpp,exportCSV,exportBackup,exportClaim,importBackup,commitImport,recoverLegacy,importContractors,statusDialog,updateStatus,copyCompletionCode,duplicateDialog,lookupDuplicateCode,createDuplicateClaim,variationDialog,startVariation,previewScheduleVersion,printScheduleVersion,changeReportDialog,refreshChangeReport,printChangeReport};
+ const api={refreshContractorHub,refreshContractorAccess,loadContractorAccounts,contractorAccessSearch,viewContractorAccess,retryContractorClaims,closeContractorAccess,openContractorAccessClaim,retryStaffAccess,loadStaffAccounts,saveStaffLevel,init,nav,menu,close,help,account,setAuthMode,authRoleChanged,togglePassword,resetPassword,signIn,signOut,reconnect,restoreSession,sendVerification,checkVerification,saveLive,findClaim,searchClaim,newClaim,openLocal,removeLocal,loadLiveClaims,openLiveIndex,claimScope:setClaimScope,claimSearch,claimSort:setClaimSort,setRoom,roomDialog,saveRoom,deleteRoom,ratesForRoom,manualDialog,addManual,removeLine,duplicateLine,moveLine,moveLineTo,undo,redo,clearSchedule,variance,rateSearch,rateTrade,rateFavorites,rateNext,setRateRoom,favorite,addRate,toggleRateAdmin,editRate,saveRate,contractorSearch,contractorFilter,contractorDialog,saveContractor,assignDialog,assignContractor,assignmentEmail,copyEmail,openEmail,reportMode,printReport,previewCpp,exportCSV,exportBackup,exportClaim,importBackup,commitImport,recoverLegacy,importContractors,statusDialog,updateStatus,copyCompletionCode,duplicateDialog,lookupDuplicateCode,createDuplicateClaim,variationDialog,startVariation,previewScheduleVersion,printScheduleVersion,changeReportDialog,refreshChangeReport,printChangeReport};
  return api;
 })();
 window.N=N;
