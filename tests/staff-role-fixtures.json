@@ -1,0 +1,124 @@
+{
+  "newBlank": {
+    "claimRef": "NEW",
+    "claimantName": "",
+    "propertyAddress": "",
+    "claimType": "Impact Damage",
+    "assignedContractor": "",
+    "tbrnClaimsConcierge": "Concierge",
+    "tbrnReviewerSurveyor": "Surveyor",
+    "claimRefLower": "new",
+    "claimantNameLower": "",
+    "propertyAddressLower": "",
+    "assignedContractorLower": "",
+    "formData": {
+      "claimRef": "NEW",
+      "claimantName": "",
+      "propertyAddress": "",
+      "claimType": "Impact Damage",
+      "assignedContractor": "",
+      "tbrnClaimsConcierge": "Concierge",
+      "tbrnReviewerSurveyor": "Surveyor",
+      "scheduleStatus": "Draft"
+    },
+    "scheduleStatus": "Draft",
+    "schedule": [],
+    "claimId": "NEW",
+    "updatedBy": "staff@tbrn.co.uk",
+    "updatedAt": {
+      "seconds": 1760000010,
+      "nanoseconds": 0
+    },
+    "createdAt": {
+      "seconds": 1760000011,
+      "nanoseconds": 0
+    },
+    "novaRevision": 1
+  },
+  "legacyBefore": {
+    "formData": {
+      "claimRef": "OLD",
+      "claimantName": "Old name",
+      "propertyAddress": "Old address",
+      "tbrnClaimsConcierge": "Concierge",
+      "tbrnReviewerSurveyor": "Surveyor",
+      "scheduleStatus": "TBRN Approved Schedule",
+      "vat": "20",
+      "surveyorNotes": "Stored legacy note",
+      "cppWelfare": "Legacy welfare"
+    },
+    "schedule": [
+      {
+        "description": "Original legacy item",
+        "quantity": "4.5",
+        "rate": "12.345678",
+        "notes": "Original note",
+        "roomName": "Old room"
+      }
+    ],
+    "rooms": [
+      "Old room"
+    ],
+    "unknownLegacy": {
+      "retain": true
+    },
+    "novaRevision": 2,
+    "updatedAt": {
+      "seconds": 100
+    },
+    "createdAt": {
+      "seconds": 90
+    }
+  },
+  "legacyAfter": {
+    "formData": {
+      "claimRef": "OLD",
+      "claimantName": "New legacy name",
+      "propertyAddress": "Old address",
+      "tbrnClaimsConcierge": "Concierge",
+      "tbrnReviewerSurveyor": "Surveyor",
+      "scheduleStatus": "TBRN Approved Schedule",
+      "vat": "20",
+      "surveyorNotes": "Stored legacy note",
+      "cppWelfare": "Legacy welfare",
+      "claimType": "Impact Damage",
+      "assignedContractor": ""
+    },
+    "schedule": [
+      {
+        "description": "Original legacy item",
+        "quantity": "4.5",
+        "rate": "12.345678",
+        "notes": "Original note",
+        "roomName": "Old room"
+      }
+    ],
+    "rooms": [
+      "Old room"
+    ],
+    "unknownLegacy": {
+      "retain": true
+    },
+    "novaRevision": 3,
+    "updatedAt": {
+      "seconds": 1760000010,
+      "nanoseconds": 0
+    },
+    "createdAt": {
+      "seconds": 90
+    },
+    "claimRef": "OLD",
+    "claimantName": "New legacy name",
+    "propertyAddress": "Old address",
+    "claimType": "Impact Damage",
+    "assignedContractor": "",
+    "tbrnClaimsConcierge": "Concierge",
+    "tbrnReviewerSurveyor": "Surveyor",
+    "claimRefLower": "old",
+    "claimantNameLower": "new legacy name",
+    "propertyAddressLower": "old address",
+    "assignedContractorLower": "",
+    "claimId": "OLD",
+    "updatedBy": "staff@tbrn.co.uk"
+  }
+}

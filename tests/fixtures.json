@@ -1,0 +1,1172 @@
+{
+  "approvedOriginal": {
+    "claimRef": "TEST-SOURCE",
+    "claimantName": "Example claimant",
+    "propertyAddress": "Example address",
+    "claimType": "Impact Damage",
+    "assignedContractor": "builder@example.test",
+    "assignedContractorName": "Example Builder",
+    "tbrnClaimsConcierge": "Example Concierge",
+    "tbrnReviewerSurveyor": "Example Reviewer",
+    "scheduleStatus": "TBRN Approved Schedule",
+    "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+    "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+    "rooms": [
+      "Living room",
+      "Kitchen"
+    ],
+    "roomDimensions": {
+      "Living room": {
+        "length": 4,
+        "width": 3,
+        "height": 2.4
+      }
+    },
+    "regionalVariance": 15,
+    "vat": 20,
+    "surveyorNotes": "Original scope.",
+    "schedule": [
+      {
+        "id": "line1",
+        "room": "Living room",
+        "code": "TEST1",
+        "trade": "Decoration",
+        "description": "Prepare and paint walls",
+        "note": "Two coats",
+        "notes": "Two coats",
+        "qty": 12.5,
+        "rate": 19.34567,
+        "unit": "m2",
+        "contractorSubmitted": true
+      }
+    ],
+    "cpp": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "novaRevision": 1,
+    "createdAt": {
+      "seconds": 1760000000,
+      "nanoseconds": 0
+    },
+    "updatedAt": {
+      "seconds": 1760000001,
+      "nanoseconds": 0
+    },
+    "version": 5,
+    "savedAt": "2026-10-21T11:55:38.547Z",
+    "cppData": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "formData": {
+      "claimantName": "Example claimant",
+      "claimRef": "TEST-SOURCE",
+      "propertyAddress": "Example address",
+      "claimType": "Impact Damage",
+      "assignedContractor": "builder@example.test",
+      "scheduleStatus": "TBRN Approved Schedule",
+      "surveyorNotes": "Original scope.",
+      "regionalVariance": 15,
+      "regionalVariancePreset": "",
+      "vat": 20,
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": "",
+      "tbrnClaimsConcierge": "Example Concierge",
+      "tbrnReviewerSurveyor": "Example Reviewer"
+    },
+    "claimRefLower": "test-source",
+    "claimantNameLower": "example claimant",
+    "propertyAddressLower": "example address",
+    "assignedContractorLower": "builder@example.test",
+    "totals": {
+      "net": 241.82087499999997,
+      "variance": 36.27313125,
+      "vat": 55.61880124999999,
+      "gross": 333.71280749999994
+    }
+  },
+  "variationStarted": {
+    "claimRef": "TEST-SOURCE",
+    "claimantName": "Example claimant",
+    "propertyAddress": "Example address",
+    "claimType": "Impact Damage",
+    "assignedContractor": "builder@example.test",
+    "assignedContractorName": "Example Builder",
+    "tbrnClaimsConcierge": "Example Concierge",
+    "tbrnReviewerSurveyor": "Example Reviewer",
+    "scheduleStatus": "In Progress",
+    "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+    "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+    "rooms": [
+      "Living room",
+      "Kitchen"
+    ],
+    "roomDimensions": {
+      "Living room": {
+        "length": 4,
+        "width": 3,
+        "height": 2.4
+      }
+    },
+    "regionalVariance": 15,
+    "vat": 20,
+    "surveyorNotes": "Original scope.",
+    "schedule": [
+      {
+        "id": "line1",
+        "room": "Living room",
+        "code": "TEST1",
+        "trade": "Decoration",
+        "description": "Prepare and paint walls",
+        "note": "Two coats",
+        "notes": "Two coats",
+        "qty": 12.5,
+        "rate": 19.34567,
+        "unit": "m2"
+      }
+    ],
+    "cpp": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "novaRevision": 2,
+    "createdAt": {
+      "seconds": 1760000000,
+      "nanoseconds": 0
+    },
+    "updatedAt": {
+      "seconds": 1760000010,
+      "nanoseconds": 0
+    },
+    "scheduleHistory": [
+      {
+        "id": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26",
+        "number": 1,
+        "savedAt": "2026-10-21T11:55:38.551Z",
+        "savedBy": "staff@tbrn.co.uk",
+        "status": "TBRN Approved Schedule",
+        "payload": {
+          "claimRef": "TEST-SOURCE",
+          "claimantName": "Example claimant",
+          "propertyAddress": "Example address",
+          "claimType": "Impact Damage",
+          "surveyorNotes": "Original scope.",
+          "rooms": [
+            "Living room",
+            "Kitchen"
+          ],
+          "roomDimensions": {
+            "Living room": {
+              "length": 4,
+              "width": 3,
+              "height": 2.4
+            }
+          },
+          "schedule": [
+            {
+              "id": "line1",
+              "room": "Living room",
+              "code": "TEST1",
+              "trade": "Decoration",
+              "description": "Prepare and paint walls",
+              "note": "Two coats",
+              "notes": "Two coats",
+              "qty": 12.5,
+              "rate": 19.34567,
+              "unit": "m2",
+              "contractorSubmitted": true
+            }
+          ],
+          "regionalVariance": 15,
+          "vat": 20,
+          "scheduleStatus": "TBRN Approved Schedule",
+          "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+          "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+          "scheduleVersion": {
+            "number": 1,
+            "reason": "",
+            "startedAt": "",
+            "startedBy": ""
+          }
+        }
+      }
+    ],
+    "scheduleVersion": {
+      "number": 2,
+      "reason": "Extra work exposed during repairs.",
+      "startedAt": "2026-10-21T11:55:38.551Z",
+      "startedBy": "staff@tbrn.co.uk",
+      "sourceVersionId": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26"
+    },
+    "previousScheduleStatus": "TBRN Approved Schedule",
+    "lastStatusChangedBy": "staff@tbrn.co.uk",
+    "lastStatusChangedAt": "2026-10-21T11:55:38.551Z",
+    "version": 5,
+    "savedAt": "2026-10-21T11:55:38.552Z",
+    "cppData": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "formData": {
+      "claimantName": "Example claimant",
+      "claimRef": "TEST-SOURCE",
+      "propertyAddress": "Example address",
+      "claimType": "Impact Damage",
+      "assignedContractor": "builder@example.test",
+      "scheduleStatus": "In Progress",
+      "surveyorNotes": "Original scope.",
+      "regionalVariance": 15,
+      "regionalVariancePreset": "",
+      "vat": 20,
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": "",
+      "tbrnClaimsConcierge": "Example Concierge",
+      "tbrnReviewerSurveyor": "Example Reviewer"
+    },
+    "claimRefLower": "test-source",
+    "claimantNameLower": "example claimant",
+    "propertyAddressLower": "example address",
+    "assignedContractorLower": "builder@example.test",
+    "totals": {
+      "net": 241.82087499999997,
+      "variance": 36.27313125,
+      "vat": 55.61880124999999,
+      "gross": 333.71280749999994
+    },
+    "claimId": "TEST-SOURCE",
+    "updatedBy": "staff@tbrn.co.uk"
+  },
+  "contractBefore": {
+    "claimRef": "TEST-SOURCE",
+    "claimantName": "Example claimant",
+    "propertyAddress": "Example address",
+    "claimType": "Impact Damage",
+    "assignedContractor": "builder@example.test",
+    "assignedContractorName": "Example Builder",
+    "tbrnClaimsConcierge": "Example Concierge",
+    "tbrnReviewerSurveyor": "Example Reviewer",
+    "scheduleStatus": "In Progress",
+    "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+    "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+    "rooms": [
+      "Living room",
+      "Kitchen"
+    ],
+    "roomDimensions": {
+      "Living room": {
+        "length": 4,
+        "width": 3,
+        "height": 2.4
+      }
+    },
+    "regionalVariance": 15,
+    "vat": 20,
+    "surveyorNotes": "Original scope.",
+    "schedule": [
+      {
+        "id": "line1",
+        "room": "Living room",
+        "code": "TEST1",
+        "trade": "Decoration",
+        "description": "Prepare and paint walls",
+        "note": "Two coats",
+        "notes": "Two coats",
+        "qty": 12.5,
+        "rate": 19.34567,
+        "unit": "m2"
+      }
+    ],
+    "cpp": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "novaRevision": 2,
+    "createdAt": {
+      "seconds": 1760000000,
+      "nanoseconds": 0
+    },
+    "updatedAt": {
+      "seconds": 1760000010,
+      "nanoseconds": 0
+    },
+    "scheduleHistory": [
+      {
+        "id": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26",
+        "number": 1,
+        "savedAt": "2026-10-21T11:55:38.551Z",
+        "savedBy": "staff@tbrn.co.uk",
+        "status": "TBRN Approved Schedule",
+        "payload": {
+          "claimRef": "TEST-SOURCE",
+          "claimantName": "Example claimant",
+          "propertyAddress": "Example address",
+          "claimType": "Impact Damage",
+          "surveyorNotes": "Original scope.",
+          "rooms": [
+            "Living room",
+            "Kitchen"
+          ],
+          "roomDimensions": {
+            "Living room": {
+              "length": 4,
+              "width": 3,
+              "height": 2.4
+            }
+          },
+          "schedule": [
+            {
+              "id": "line1",
+              "room": "Living room",
+              "code": "TEST1",
+              "trade": "Decoration",
+              "description": "Prepare and paint walls",
+              "note": "Two coats",
+              "notes": "Two coats",
+              "qty": 12.5,
+              "rate": 19.34567,
+              "unit": "m2",
+              "contractorSubmitted": true
+            }
+          ],
+          "regionalVariance": 15,
+          "vat": 20,
+          "scheduleStatus": "TBRN Approved Schedule",
+          "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+          "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+          "scheduleVersion": {
+            "number": 1,
+            "reason": "",
+            "startedAt": "",
+            "startedBy": ""
+          }
+        }
+      }
+    ],
+    "scheduleVersion": {
+      "number": 2,
+      "reason": "Extra work exposed during repairs.",
+      "startedAt": "2026-10-21T11:55:38.551Z",
+      "startedBy": "staff@tbrn.co.uk",
+      "sourceVersionId": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26"
+    },
+    "previousScheduleStatus": "TBRN Approved Schedule",
+    "lastStatusChangedBy": "staff@tbrn.co.uk",
+    "lastStatusChangedAt": "2026-10-21T11:55:38.551Z",
+    "version": 5,
+    "savedAt": "2026-10-21T11:55:38.552Z",
+    "cppData": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "formData": {
+      "claimantName": "Example claimant",
+      "claimRef": "TEST-SOURCE",
+      "propertyAddress": "Example address",
+      "claimType": "Impact Damage",
+      "assignedContractor": "builder@example.test",
+      "scheduleStatus": "In Progress",
+      "surveyorNotes": "Original scope.",
+      "regionalVariance": 15,
+      "regionalVariancePreset": "",
+      "vat": 20,
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": "",
+      "tbrnClaimsConcierge": "Example Concierge",
+      "tbrnReviewerSurveyor": "Example Reviewer"
+    },
+    "claimRefLower": "test-source",
+    "claimantNameLower": "example claimant",
+    "propertyAddressLower": "example address",
+    "assignedContractorLower": "builder@example.test",
+    "totals": {
+      "net": 241.82087499999997,
+      "variance": 36.27313125,
+      "vat": 55.61880124999999,
+      "gross": 333.71280749999994
+    },
+    "claimId": "TEST-SOURCE",
+    "updatedBy": "staff@tbrn.co.uk"
+  },
+  "contractAfter": {
+    "claimRef": "TEST-SOURCE",
+    "claimantName": "Example claimant",
+    "propertyAddress": "Example address",
+    "claimType": "Impact Damage",
+    "assignedContractor": "builder@example.test",
+    "assignedContractorName": "Example Builder",
+    "tbrnClaimsConcierge": "Example Concierge",
+    "tbrnReviewerSurveyor": "Example Reviewer",
+    "scheduleStatus": "In Progress",
+    "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+    "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+    "rooms": [
+      "Living room",
+      "Kitchen"
+    ],
+    "roomDimensions": {
+      "Living room": {
+        "length": 4,
+        "width": 3,
+        "height": 2.4
+      }
+    },
+    "regionalVariance": 15,
+    "vat": 20,
+    "surveyorNotes": "Original scope.",
+    "schedule": [
+      {
+        "id": "line1",
+        "room": "Living room",
+        "code": "TEST1",
+        "trade": "Decoration",
+        "description": "Prepare and paint walls",
+        "note": "Two coats",
+        "notes": "Two coats",
+        "qty": 32,
+        "rate": 19.34567,
+        "unit": "m2",
+        "quantity": 32
+      }
+    ],
+    "cpp": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "novaRevision": 3,
+    "createdAt": {
+      "seconds": 1760000000,
+      "nanoseconds": 0
+    },
+    "updatedAt": {
+      "seconds": 1760000011,
+      "nanoseconds": 0
+    },
+    "scheduleHistory": [
+      {
+        "id": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26",
+        "number": 1,
+        "savedAt": "2026-10-21T11:55:38.551Z",
+        "savedBy": "staff@tbrn.co.uk",
+        "status": "TBRN Approved Schedule",
+        "payload": {
+          "claimRef": "TEST-SOURCE",
+          "claimantName": "Example claimant",
+          "propertyAddress": "Example address",
+          "claimType": "Impact Damage",
+          "surveyorNotes": "Original scope.",
+          "rooms": [
+            "Living room",
+            "Kitchen"
+          ],
+          "roomDimensions": {
+            "Living room": {
+              "length": 4,
+              "width": 3,
+              "height": 2.4
+            }
+          },
+          "schedule": [
+            {
+              "id": "line1",
+              "room": "Living room",
+              "code": "TEST1",
+              "trade": "Decoration",
+              "description": "Prepare and paint walls",
+              "note": "Two coats",
+              "notes": "Two coats",
+              "qty": 12.5,
+              "rate": 19.34567,
+              "unit": "m2",
+              "contractorSubmitted": true
+            }
+          ],
+          "regionalVariance": 15,
+          "vat": 20,
+          "scheduleStatus": "TBRN Approved Schedule",
+          "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+          "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+          "scheduleVersion": {
+            "number": 1,
+            "reason": "",
+            "startedAt": "",
+            "startedBy": ""
+          }
+        }
+      }
+    ],
+    "scheduleVersion": {
+      "number": 2,
+      "reason": "Extra work exposed during repairs.",
+      "startedAt": "2026-10-21T11:55:38.551Z",
+      "startedBy": "staff@tbrn.co.uk",
+      "sourceVersionId": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26"
+    },
+    "previousScheduleStatus": "TBRN Approved Schedule",
+    "lastStatusChangedBy": "staff@tbrn.co.uk",
+    "lastStatusChangedAt": "2026-10-21T11:55:38.551Z",
+    "version": 5,
+    "savedAt": "2026-10-21T11:55:38.589Z",
+    "cppData": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "formData": {
+      "claimantName": "Example claimant",
+      "claimRef": "TEST-SOURCE",
+      "propertyAddress": "Example address",
+      "claimType": "Impact Damage",
+      "assignedContractor": "builder@example.test",
+      "scheduleStatus": "In Progress",
+      "surveyorNotes": "Original scope.",
+      "regionalVariance": 15,
+      "regionalVariancePreset": "",
+      "vat": 20,
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": "",
+      "tbrnClaimsConcierge": "Example Concierge",
+      "tbrnReviewerSurveyor": "Example Reviewer"
+    },
+    "claimRefLower": "test-source",
+    "claimantNameLower": "example claimant",
+    "propertyAddressLower": "example address",
+    "assignedContractorLower": "builder@example.test",
+    "totals": {
+      "net": 619.06144,
+      "variance": 92.859216,
+      "vat": 142.3841312,
+      "gross": 854.3047872
+    },
+    "claimId": "TEST-SOURCE",
+    "updatedBy": "builder@example.test"
+  },
+  "submitted": {
+    "claimRef": "TEST-SOURCE",
+    "claimantName": "Example claimant",
+    "propertyAddress": "Example address",
+    "claimType": "Impact Damage",
+    "assignedContractor": "builder@example.test",
+    "assignedContractorName": "Example Builder",
+    "tbrnClaimsConcierge": "Example Concierge",
+    "tbrnReviewerSurveyor": "Example Reviewer",
+    "scheduleStatus": "Contractor Schedule Complete",
+    "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+    "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+    "rooms": [
+      "Living room",
+      "Kitchen"
+    ],
+    "roomDimensions": {
+      "Living room": {
+        "length": 4,
+        "width": 3,
+        "height": 2.4
+      }
+    },
+    "regionalVariance": 15,
+    "vat": 20,
+    "surveyorNotes": "Original scope.",
+    "schedule": [
+      {
+        "id": "line1",
+        "room": "Living room",
+        "code": "TEST1",
+        "trade": "Decoration",
+        "description": "Prepare and paint walls",
+        "note": "Two coats",
+        "notes": "Two coats",
+        "qty": 32,
+        "rate": 19.34567,
+        "unit": "m2",
+        "quantity": 32,
+        "contractorSubmitted": true
+      }
+    ],
+    "cpp": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "novaRevision": 4,
+    "createdAt": {
+      "seconds": 1760000000,
+      "nanoseconds": 0
+    },
+    "updatedAt": {
+      "seconds": 1760000012,
+      "nanoseconds": 0
+    },
+    "scheduleHistory": [
+      {
+        "id": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26",
+        "number": 1,
+        "savedAt": "2026-10-21T11:55:38.551Z",
+        "savedBy": "staff@tbrn.co.uk",
+        "status": "TBRN Approved Schedule",
+        "payload": {
+          "claimRef": "TEST-SOURCE",
+          "claimantName": "Example claimant",
+          "propertyAddress": "Example address",
+          "claimType": "Impact Damage",
+          "surveyorNotes": "Original scope.",
+          "rooms": [
+            "Living room",
+            "Kitchen"
+          ],
+          "roomDimensions": {
+            "Living room": {
+              "length": 4,
+              "width": 3,
+              "height": 2.4
+            }
+          },
+          "schedule": [
+            {
+              "id": "line1",
+              "room": "Living room",
+              "code": "TEST1",
+              "trade": "Decoration",
+              "description": "Prepare and paint walls",
+              "note": "Two coats",
+              "notes": "Two coats",
+              "qty": 12.5,
+              "rate": 19.34567,
+              "unit": "m2",
+              "contractorSubmitted": true
+            }
+          ],
+          "regionalVariance": 15,
+          "vat": 20,
+          "scheduleStatus": "TBRN Approved Schedule",
+          "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+          "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+          "scheduleVersion": {
+            "number": 1,
+            "reason": "",
+            "startedAt": "",
+            "startedBy": ""
+          }
+        }
+      }
+    ],
+    "scheduleVersion": {
+      "number": 2,
+      "reason": "Extra work exposed during repairs.",
+      "startedAt": "2026-10-21T11:55:38.551Z",
+      "startedBy": "staff@tbrn.co.uk",
+      "sourceVersionId": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26"
+    },
+    "previousScheduleStatus": "In Progress",
+    "lastStatusChangedBy": "builder@example.test",
+    "lastStatusChangedAt": "2026-10-21T11:55:38.591Z",
+    "version": 5,
+    "savedAt": "2026-10-21T11:55:38.592Z",
+    "cppData": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "formData": {
+      "claimantName": "Example claimant",
+      "claimRef": "TEST-SOURCE",
+      "propertyAddress": "Example address",
+      "claimType": "Impact Damage",
+      "assignedContractor": "builder@example.test",
+      "scheduleStatus": "Contractor Schedule Complete",
+      "surveyorNotes": "Original scope.",
+      "regionalVariance": 15,
+      "regionalVariancePreset": "",
+      "vat": 20,
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": "",
+      "tbrnClaimsConcierge": "Example Concierge",
+      "tbrnReviewerSurveyor": "Example Reviewer"
+    },
+    "claimRefLower": "test-source",
+    "claimantNameLower": "example claimant",
+    "propertyAddressLower": "example address",
+    "assignedContractorLower": "builder@example.test",
+    "totals": {
+      "net": 619.06144,
+      "variance": 92.859216,
+      "vat": 142.3841312,
+      "gross": 854.3047872
+    },
+    "claimId": "TEST-SOURCE",
+    "updatedBy": "builder@example.test"
+  },
+  "approved": {
+    "claimRef": "TEST-SOURCE",
+    "claimantName": "Example claimant",
+    "propertyAddress": "Example address",
+    "claimType": "Impact Damage",
+    "assignedContractor": "builder@example.test",
+    "assignedContractorName": "Example Builder",
+    "tbrnClaimsConcierge": "Example Concierge",
+    "tbrnReviewerSurveyor": "Example Reviewer",
+    "scheduleStatus": "TBRN Approved Schedule",
+    "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+    "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+    "rooms": [
+      "Living room",
+      "Kitchen"
+    ],
+    "roomDimensions": {
+      "Living room": {
+        "length": 4,
+        "width": 3,
+        "height": 2.4
+      }
+    },
+    "regionalVariance": 15,
+    "vat": 20,
+    "surveyorNotes": "Original scope.",
+    "schedule": [
+      {
+        "id": "line1",
+        "room": "Living room",
+        "code": "TEST1",
+        "trade": "Decoration",
+        "description": "Prepare and paint walls",
+        "note": "Two coats",
+        "notes": "Two coats",
+        "qty": 32,
+        "rate": 19.34567,
+        "unit": "m2",
+        "quantity": 32,
+        "contractorSubmitted": true
+      }
+    ],
+    "cpp": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "novaRevision": 5,
+    "createdAt": {
+      "seconds": 1760000000,
+      "nanoseconds": 0
+    },
+    "updatedAt": {
+      "seconds": 1760000013,
+      "nanoseconds": 0
+    },
+    "scheduleHistory": [
+      {
+        "id": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26",
+        "number": 1,
+        "savedAt": "2026-10-21T11:55:38.551Z",
+        "savedBy": "staff@tbrn.co.uk",
+        "status": "TBRN Approved Schedule",
+        "payload": {
+          "claimRef": "TEST-SOURCE",
+          "claimantName": "Example claimant",
+          "propertyAddress": "Example address",
+          "claimType": "Impact Damage",
+          "surveyorNotes": "Original scope.",
+          "rooms": [
+            "Living room",
+            "Kitchen"
+          ],
+          "roomDimensions": {
+            "Living room": {
+              "length": 4,
+              "width": 3,
+              "height": 2.4
+            }
+          },
+          "schedule": [
+            {
+              "id": "line1",
+              "room": "Living room",
+              "code": "TEST1",
+              "trade": "Decoration",
+              "description": "Prepare and paint walls",
+              "note": "Two coats",
+              "notes": "Two coats",
+              "qty": 12.5,
+              "rate": 19.34567,
+              "unit": "m2",
+              "contractorSubmitted": true
+            }
+          ],
+          "regionalVariance": 15,
+          "vat": 20,
+          "scheduleStatus": "TBRN Approved Schedule",
+          "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+          "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+          "scheduleVersion": {
+            "number": 1,
+            "reason": "",
+            "startedAt": "",
+            "startedBy": ""
+          }
+        }
+      },
+      {
+        "id": "5e02eefa-8615-4533-a455-1705d5be7463",
+        "number": 2,
+        "savedAt": "2026-10-21T11:55:38.594Z",
+        "savedBy": "staff@tbrn.co.uk",
+        "status": "TBRN Approved Schedule",
+        "payload": {
+          "claimRef": "TEST-SOURCE",
+          "claimantName": "Example claimant",
+          "propertyAddress": "Example address",
+          "claimType": "Impact Damage",
+          "surveyorNotes": "Original scope.",
+          "rooms": [
+            "Living room",
+            "Kitchen"
+          ],
+          "roomDimensions": {
+            "Living room": {
+              "length": 4,
+              "width": 3,
+              "height": 2.4
+            }
+          },
+          "schedule": [
+            {
+              "id": "line1",
+              "room": "Living room",
+              "code": "TEST1",
+              "trade": "Decoration",
+              "description": "Prepare and paint walls",
+              "note": "Two coats",
+              "notes": "Two coats",
+              "qty": 32,
+              "rate": 19.34567,
+              "unit": "m2",
+              "quantity": 32,
+              "contractorSubmitted": true
+            }
+          ],
+          "regionalVariance": 15,
+          "vat": 20,
+          "scheduleStatus": "TBRN Approved Schedule",
+          "scheduleCopyCode": "NOVA-2944F1-94FC4D-1CDDA5-A21D62",
+          "scheduleCopyCodeCreatedAt": "2026-10-01T12:00:00Z",
+          "scheduleVersion": {
+            "number": 2,
+            "reason": "Extra work exposed during repairs.",
+            "startedAt": "2026-10-21T11:55:38.551Z",
+            "startedBy": "staff@tbrn.co.uk",
+            "sourceVersionId": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26"
+          }
+        }
+      }
+    ],
+    "scheduleVersion": {
+      "number": 2,
+      "reason": "Extra work exposed during repairs.",
+      "startedAt": "2026-10-21T11:55:38.551Z",
+      "startedBy": "staff@tbrn.co.uk",
+      "sourceVersionId": "318eb6b0-2e05-46d7-b4a0-cb3689de9c26"
+    },
+    "previousScheduleStatus": "Contractor Schedule Complete",
+    "lastStatusChangedBy": "staff@tbrn.co.uk",
+    "lastStatusChangedAt": "2026-10-21T11:55:38.594Z",
+    "version": 5,
+    "savedAt": "2026-10-21T11:55:38.594Z",
+    "cppData": {
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": ""
+    },
+    "formData": {
+      "claimantName": "Example claimant",
+      "claimRef": "TEST-SOURCE",
+      "propertyAddress": "Example address",
+      "claimType": "Impact Damage",
+      "assignedContractor": "builder@example.test",
+      "scheduleStatus": "TBRN Approved Schedule",
+      "surveyorNotes": "Original scope.",
+      "regionalVariance": 15,
+      "regionalVariancePreset": "",
+      "vat": 20,
+      "cppPrincipalContractor": "",
+      "cppSiteManager": "",
+      "cppPreparedBy": "",
+      "cppStartDate": "",
+      "cppCompletionDate": "",
+      "cppWorkingHours": "08:00 - 17:00 Monday to Friday",
+      "cppEmergencyContact": "",
+      "cppClientContact": "",
+      "cppWelfare": "Contractor to confirm suitable welfare arrangements before works commence, including access to toilet facilities, washing facilities and drinking water.",
+      "cppAccess": "Access route to be agreed with the occupier prior to commencement. Work area to be kept secure, tidy and free from avoidable trip hazards.",
+      "cppDeliveries": "Materials to be delivered and stored safely without obstructing access. Waste to be removed from site and disposed of by licensed carrier where applicable.",
+      "cppSiteRules": "No smoking inside the property. Maintain safe access for occupants. Isolate services where required. Keep tools and materials secure. Report hazards, incidents or changes in scope immediately.",
+      "cppHazards": "Working at height where applicable: use suitable access equipment and follow current safety requirements.\nManual handling: assess loads and use assistance where required.\nDust and debris: use suitable PPE, dust suppression and housekeeping.\nElectrical services: isolate or protect services before intrusive works.\nOccupier interface: segregate work area from occupants, children and pets where practicable.",
+      "cppPpe": "Safety footwear, gloves, eye protection, dust mask/respiratory protection and any task-specific PPE required by the contractor's risk assessment.",
+      "cppContractorSignature": "",
+      "cppClientSignature": "",
+      "cppSignoffDate": "",
+      "tbrnClaimsConcierge": "Example Concierge",
+      "tbrnReviewerSurveyor": "Example Reviewer"
+    },
+    "claimRefLower": "test-source",
+    "claimantNameLower": "example claimant",
+    "propertyAddressLower": "example address",
+    "assignedContractorLower": "builder@example.test",
+    "totals": {
+      "net": 619.06144,
+      "variance": 92.859216,
+      "vat": 142.3841312,
+      "gross": 854.3047872
+    },
+    "claimId": "TEST-SOURCE",
+    "updatedBy": "staff@tbrn.co.uk"
+  }
+}

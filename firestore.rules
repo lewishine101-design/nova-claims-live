@@ -22,6 +22,89 @@ service cloud.firestore {
       return verified() && email().matches('^[^@]+@tbrn[.]co[.]uk$');
     }
 
+
+    // This collection is independent of users/{uid}. A profile or signup choice
+    // cannot grant privileges. Provision the first admin with trusted console access.
+    function accessLevel() {
+      let path = /databases/$(database)/documents/staffAccess/$(request.auth.uid);
+      return !exists(path) ? 'concierge' :
+        (get(path).data.get('email', '').lower() == email()
+          ? get(path).data.get('level', '') : '');
+    }
+
+    function scheduleStaff() {
+      return staff() && accessLevel() in ['surveyor', 'admin'];
+    }
+
+    function admin() {
+      return staff() && accessLevel() == 'admin';
+    }
+
+    function concierge() {
+      return staff() && accessLevel() == 'concierge';
+    }
+
+    function claimAdminKeys() {
+      return ['claimRef', 'claimantName', 'propertyAddress', 'claimType',
+        'assignedContractor', 'tbrnClaimsConcierge', 'tbrnReviewerSurveyor',
+        'assignedContractorEmail', 'assignedContractorEmailLower',
+        'assignedContractorName', 'contractorEmail', 'contractorEmailLower',
+        'contractorEmails', 'assignedToEmail', 'assignedTo', 'assignedEmail',
+        'assignedByEmail', 'assignedBy', 'assignedAt',
+        'claimRefLower', 'claimantNameLower', 'propertyAddressLower',
+        'assignedContractorLower', 'formData', 'claimId',
+        'updatedBy', 'updatedAt', 'createdAt', 'novaRevision', 'scheduleStatus'];
+    }
+
+    function claimAdminFormKeys() {
+      return ['claimRef', 'claimantName', 'propertyAddress', 'claimType',
+        'assignedContractor', 'tbrnClaimsConcierge', 'tbrnReviewerSurveyor',
+        'scheduleStatus'];
+    }
+
+    function conciergeStage(before, after) {
+      return stage(before) == stage(after)
+        || (stage(before) == 'Draft' && stage(after) == 'Assigned To Contractor');
+    }
+
+    function validClaimWrite(data, before, claimId) {
+      return data.get('claimId', '') == claimId
+        && data.get('updatedBy', '').lower() == email()
+        && data.get('updatedAt', null) == request.time
+        && data.get('createdAt', null) == before.get('createdAt', request.time)
+        && data.get('novaRevision', 0) == before.get('novaRevision', 0) + 1
+        && data.get('claimRefLower', '') == data.get('claimRef', '').trim().lower()
+        && data.get('claimantNameLower', '') == data.get('claimantName', '').trim().lower()
+        && data.get('propertyAddressLower', '') == data.get('propertyAddress', '').trim().lower()
+        && data.get('assignedContractorLower', '') == data.get('assignedContractor', '').trim().lower();
+    }
+
+    function conciergeCreate(data, claimId) {
+      return concierge()
+        && data.keys().hasOnly(claimAdminKeys().concat(['schedule']))
+        && data.get('formData', {}).keys().hasOnly(claimAdminFormKeys())
+        && data.get('schedule', null) == []
+        && stage(data) in ['Draft', 'Assigned To Contractor']
+        && stage(data.formData) == stage(data)
+        && currentDetails(data.formData) == currentDetails(data)
+        && validClaimWrite(data, {}, claimId);
+    }
+
+    function conciergeUpdate(before, after, claimId) {
+      return concierge()
+        && after.diff(before).affectedKeys().hasOnly(claimAdminKeys())
+        && after.get('formData', {}).diff(before.get('formData', {}))
+          .affectedKeys().hasOnly(claimAdminFormKeys())
+        && conciergeStage(before, after)
+        && (after.get('formData', {}).get('scheduleStatus', null)
+              == before.get('formData', {}).get('scheduleStatus', null)
+          || (stage(before) == 'Draft' && stage(after) == 'Assigned To Contractor'
+            && after.get('formData', {}).get('scheduleStatus', '') == 'Assigned To Contractor'))
+        && field(after, 'claimRef', '') == field(before, 'claimRef', '')
+        && currentDetails(after.formData) == currentDetails(after)
+        && validClaimWrite(after, before, claimId);
+    }
+
     // Support both current claims and the original formData format.
     function field(data, key, fallback) {
       let value = data.get(key, data.get('formData', {}).get(key, fallback));
@@ -171,7 +254,7 @@ service cloud.firestore {
       let details = currentDetails(after);
       let from = stage(before);
       let to = after.scheduleStatus;
-      return assigned(before)
+      return !staff() && assigned(before)
         && contractorFields(before, after)
         && details == coreDetails(before)
         && currentDetails(after.formData) == details
@@ -195,13 +278,15 @@ service cloud.firestore {
       // Staff may also read a missing reference before creating it in a transaction.
       allow get: if staff() || assigned(resource.data);
       allow list: if staff();
-      allow create: if staff() && completeTeam(request.resource.data);
-      allow update: if (staff() && staffTeamUpdate(resource.data, request.resource.data))
+      allow create: if completeTeam(request.resource.data)
+        && (scheduleStaff() || conciergeCreate(request.resource.data, claimId));
+      allow update: if ((scheduleStaff() || conciergeUpdate(resource.data, request.resource.data, claimId))
+          && staffTeamUpdate(resource.data, request.resource.data))
         || (resource != null && contractorUpdate(resource.data, request.resource.data, claimId));
-      allow delete: if staff();
+      allow delete: if admin();
     }
 
-    // Profile roles are display data; they never grant access to claims.
+    // These profile fields record account details and requests, never authority.
     match /users/{userId} {
       function ownProfile() {
         return signedIn() && request.auth.uid == userId;
@@ -210,31 +295,56 @@ service cloud.firestore {
         return request.resource.data.get('email', '').lower() == email()
           && request.resource.data.get('role', '') in ['staff', 'contractor']
           && (request.resource.data.get('role', '') != 'staff'
-            || email().matches('^[^@]+@tbrn[.]co[.]uk$'));
+            || email().matches('^[^@]+@tbrn[.]co[.]uk$'))
+          && (!('requestedStaffLevel' in request.resource.data)
+            || (request.resource.data.role == 'staff'
+              && request.resource.data.requestedStaffLevel in ['concierge', 'surveyor', 'admin']));
       }
       allow get: if ownProfile() || staff();
-      allow list, delete: if staff();
-      allow create: if staff() || (ownProfile() && validProfile()
+      allow list: if staff();
+      allow delete: if admin();
+      allow create: if ownProfile() && validProfile()
         && request.resource.data.keys().hasOnly([
-          'email', 'role', 'contractorName', 'createdAt', 'lastLoginAt'
-        ]));
-      allow update: if staff() || (ownProfile() && validProfile()
+          'email', 'role', 'contractorName', 'requestedStaffLevel', 'createdAt', 'lastLoginAt'
+        ]);
+      allow update: if ownProfile() && validProfile()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'email', 'role', 'contractorName', 'lastLoginAt'
-        ]));
+          'email', 'role', 'contractorName', 'requestedStaffLevel', 'lastLoginAt'
+        ]);
+    }
+
+    match /staffAccess/{userId} {
+      function validAccess() {
+        let profilePath = /databases/$(database)/documents/users/$(userId);
+        let data = request.resource.data;
+        return data.keys().hasOnly(['email', 'level', 'updatedBy', 'updatedAt'])
+          && data.get('email', '').matches('^[^@]+@tbrn[.]co[.]uk$')
+          && data.get('level', '') in ['concierge', 'surveyor', 'admin']
+          && exists(profilePath)
+          && get(profilePath).data.get('email', '').lower() == data.email
+          && data.get('updatedBy', '') == request.auth.uid
+          && data.get('updatedAt', null) == request.time
+          && (userId != request.auth.uid || data.level == 'admin');
+      }
+      allow get: if staff() && (userId == request.auth.uid || admin());
+      allow list: if admin();
+      allow create, update: if admin() && validAccess();
+      allow delete: if admin() && userId != request.auth.uid;
     }
 
     match /contractors/{contractorId} {
-      allow read, write: if staff();
+      allow read: if staff();
+      allow write: if staff() && accessLevel() in ['concierge', 'surveyor', 'admin'];
     }
 
     match /rates/{rateId} {
       allow read: if verified();
-      allow write: if staff();
+      allow write: if admin();
     }
 
     match /settings/{settingId} {
-      allow read, write: if staff();
+      allow read: if staff();
+      allow write: if admin();
     }
 
     match /{document=**} {
@@ -242,3 +352,4 @@ service cloud.firestore {
     }
   }
 }
+
