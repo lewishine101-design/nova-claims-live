@@ -1,6 +1,6 @@
 # TBRN staff access — activation
 
-The staff-level update is prepared for release. It is **not active in production** until the rules and app are both published. A Firebase plugin is not required.
+Staff access uses the app and its Firestore rules together. For a new setup, complete the steps below before enabling staff levels. A Firebase plugin is not required.
 
 Use the existing **nova-claims-system** project. The separate contractor-map project is outside this change.
 
@@ -51,6 +51,10 @@ Concierges may assign a Draft claim to a contractor; subsequent schedule status 
 
 Contractors retain their existing access to assigned claims and permitted schedule changes. They cannot create claims, list all claims, change assignments, access the contractor directory or manage staff.
 
+## Contractor access
+
+Admin / Management accounts have a **Contractor access** tab directly below **Staff access**. It lists registered contractor profiles, supports searching by company or sign-in email, and shows the live claims assigned to a selected account. Open a claim from that list to review or change its assignment. The tab and its actions are unavailable to other access levels. This page uses the existing permissions and does not require another rules update.
+
 ## How staff levels are protected
 
 - `users/{uid}.requestedStaffLevel` records the registration request only. Existing display roles in profiles grant no permissions.
@@ -69,7 +73,7 @@ If a management user has no `users/{uid}` profile because an older signup failed
 
 ## Validation
 
-145 application checks and 121 Firestore-emulator checks passed. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation and contractor isolation. All test claims and accounts are synthetic; no production claims were changed and no real emails were sent. Production rules deployment and authenticated browser verification are still required.
+168 application checks passed. The unchanged Firestore rules have 121 passing emulator checks from the staff-level release. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation and contractor isolation. All test claims and accounts are synthetic; no production claims were changed and no real emails were sent. Production rules deployment and authenticated browser verification are still required.
 
 Official Firebase guidance: [manage and deploy rules](https://firebase.google.com/docs/rules/manage-deploy), [rules propagation](https://firebase.google.com/docs/firestore/security/get-started), and [manage Firestore data in the console](https://firebase.google.com/docs/firestore/using-console).
 
