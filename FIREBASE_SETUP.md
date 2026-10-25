@@ -42,9 +42,10 @@ These rules do not rewrite existing claims, rates, saved versions or contractor 
 | View the contractor directory | Yes | Yes | Yes |
 | Create blank claims; edit claimant/property details and assignments | Yes | Yes | Yes |
 | Build/amend schedules, room dimensions, pricing and construction plans | No | Yes | Yes |
-| Submit/approve schedules; start variations; duplicate or import schedules | No | Yes | Yes |
+| Submit/approve schedules; start variations; duplicate schedules | No | Yes | Yes |
 | Edit/import the rate library | No | No | Yes |
 | Approve/change staff access | No | No | Yes |
+| Open Data & backup; export/import JSON backups; recover browser records | No | No | Yes |
 | Delete live claims or change database system settings | No | No | Yes |
 
 Concierges may assign a Draft claim to a contractor; subsequent schedule status changes require a Surveyor / Reviewer or management. New claims still require both a TBRN Claims Concierge and TBRN Reviewer/Surveyor in the assignment section.
@@ -80,6 +81,8 @@ No additional Firestore rules publication is needed for this read-only integrati
 
 Live claims remain in Firestore; local drafts and the current rate-library overrides remain in browser storage and backups. This change does not add central synchronisation of browser rate overrides. Signing out hides claim/report content but does not encrypt or erase local drafts.
 
+**Data & backup is restricted to verified TBRN Admin / Management accounts.** The Manage group and navigation entry start hidden and appear only after the protected staff role is confirmed. Navigation, page rendering, workspace and claim JSON exports, backup selection/preview/commit and browser-record recovery all enforce the same requirement. A role downgrade, failed role check or account switch closes an open backup preview and clears the pending import; an asynchronous file read cannot carry an import into another session. Existing schedule/report viewing, CSV exports and PDF printing keep their claim-access permissions. These controls apply to the app's management section; browser-local data is still unencrypted as described above. No database rule changes are required.
+
 ### One saved entry per live claim
 
 Opening a live claim refreshes its existing local copy by its exact Firestore document ID. It no longer appends another copy on each open. The **Saved on this device** list and recent claims show one entry per live document, using the most recent confirmed copy. Extra clean cached copies from older app versions are consolidated when signing in or reopening/saving the live claim. Separate document IDs and independent local drafts are not merged merely because they have the same reference.
@@ -94,7 +97,7 @@ If a management user has no `users/{uid}` profile because an older signup failed
 
 ## Validation
 
-237 application checks passed. The unchanged Firestore rules have 121 passing emulator checks from the staff-level release. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation, contractor isolation, Hub matching, live updates, stale responses and connection failures. The claim-cache regression reproduces contractor submission followed by approval in separate synthetic browsers, repeated opens, legacy cached duplicates, draft preservation and stale-write rejection. Application test claims and profiles are synthetic; no production claims were changed and no real emails were sent. The separate read-only live Hub check used a temporary anonymous session, removed afterwards. The Firebase rules publication was confirmed by the project owner; it has not been independently inspected, and authenticated Scheduling browser verification still requires an Admin account.
+266 application checks passed. The unchanged Firestore rules have 121 passing emulator checks from the staff-level release. They cover existing features, role loading, account switching, signup requests, management approvals, legacy metadata saves, direct write bypasses, privilege escalation, contractor isolation, Hub matching, live updates, stale responses and connection failures. The claim-cache regression reproduces contractor submission followed by approval in separate synthetic browsers, repeated opens, legacy cached duplicates, draft preservation and stale-write rejection. Data & backup checks cover every access level, direct action guards, page restoration, role changes, pending reads and normal admin exports/imports/recovery. Application test claims and profiles are synthetic; no production claims were changed and no real emails were sent. The separate read-only live Hub check used a temporary anonymous session, removed afterwards. The Firebase rules publication was confirmed by the project owner; it has not been independently inspected, and authenticated Scheduling browser verification still requires an Admin account.
 
 Official Firebase guidance: [manage and deploy rules](https://firebase.google.com/docs/rules/manage-deploy), [rules propagation](https://firebase.google.com/docs/firestore/security/get-started), and [manage Firestore data in the console](https://firebase.google.com/docs/firestore/using-console).
 
