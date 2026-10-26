@@ -39,6 +39,7 @@
 .sidebar{overflow-y:auto}.contractor-account-email{overflow-wrap:anywhere}
 .contractor-hub-notice{margin-bottom:18px;align-items:center;justify-content:space-between;gap:16px}.contractor-hub-notice>div{min-width:0}.contractor-hub-notes{white-space:pre-wrap;margin-top:7px;max-width:280px;overflow-wrap:anywhere}#contractorAccountRows td{vertical-align:top}#contractorAccountRows .badge{white-space:normal}
 .local-claim-draft-notice{margin-bottom:18px;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.claim-delete-summary{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 16px;margin:20px 0}.claim-delete-summary dt{color:var(--muted)}.claim-delete-summary dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:520px){.claim-delete-summary{grid-template-columns:1fr;gap:4px}.claim-delete-summary dd{margin-bottom:8px}}
 </style>
 </head>
 <body class="auth-screen">
@@ -183,7 +184,7 @@ const N = (() => {
  const canEditCpp=()=>canEdit()&&canWorkSchedule();
  function allowBuildSchedules(){if(canBuildSchedules())return true;toast('Schedule changes require Surveyor / Reviewer or Admin / Management access.',true);return false;}
  function staffLevelLabel(){return staffReady()?staffLevels[staffLevel()]:'Staff access unavailable';}
- function clearStaffAccess(){clearDataAdminAccess();clearContractorAccess();staffAccessEpoch++;if(staffAccessStop)staffAccessStop();staffAccessStop=null;staffAccessPromise=null;staffAccess={uid:'',ready:false,level:'',error:''};staffAccounts=[];staffAccountsError='';staffAccountsBusy=false;staffAccountsRequest++;rateAdmin=false;}
+ function clearStaffAccess(){clearClaimDeletionAccess();clearDataAdminAccess();clearContractorAccess();staffAccessEpoch++;if(staffAccessStop)staffAccessStop();staffAccessStop=null;staffAccessPromise=null;staffAccess={uid:'',ready:false,level:'',error:''};staffAccounts=[];staffAccountsError='';staffAccountsBusy=false;staffAccountsRequest++;rateAdmin=false;}
  function resolvedStaffLevel(snapshot,account){
   if(!snapshot.exists())return 'concierge';
   const data=snapshot.data();
@@ -202,7 +203,7 @@ const N = (() => {
    staffAccess={uid:account.uid,ready:true,level,error:''};
    if(changedLevel){clearContractorAccess();rateAdmin=false;undoStack=[];redoStack=[];pendingImport=null;pendingDuplicate=null;pendingVariation=null;staffAccounts=[];staffAccountsRequest++;staffAccountsBusy=false;close();}
   };
-  const fail=()=>{if(current()){clearDataAdminAccess();clearContractorAccess();staffAccess={uid:account.uid,ready:false,level:'',error:'Staff permissions could not be checked. You can view claims; editing is paused.'};rateAdmin=false;staffAccounts=[];staffAccountsRequest++;staffAccountsBusy=false;render();}};
+  const fail=()=>{if(current()){clearClaimDeletionAccess();clearDataAdminAccess();clearContractorAccess();staffAccess={uid:account.uid,ready:false,level:'',error:'Staff permissions could not be checked. You can view claims; editing is paused.'};rateAdmin=false;staffAccounts=[];staffAccountsRequest++;staffAccountsBusy=false;render();}};
   staffAccessPromise=(async()=>{
    try{
     const ref=F.doc(db,'staffAccess',account.uid),snapshot=await F.getDocFromServer(ref);
@@ -487,8 +488,8 @@ const N = (() => {
   }
  }
 
- function modal(title,body,footer='',wide=false){dataAdminDialogOpen=false;lastFocus=document.activeElement;const d=byId('dialog');if(d.open)d.close();d.classList.toggle('wide',wide);d.innerHTML=`<div class="modal-head"><h2 id="dialogTitle">${esc(title)}</h2><button class="icon-btn ghost" aria-label="Close dialog" onclick="N.close()">${icon('close')}</button></div><div class="modal-content">${body}</div>${footer?`<div class="modal-foot">${footer}</div>`:''}`;d.showModal();}
- function close(){dataAdminDialogOpen=false;byId('dialog').close();lastFocus?.focus?.();}
+ function modal(title,body,footer='',wide=false){pendingClaimDeletion=null;dataAdminDialogOpen=false;lastFocus=document.activeElement;const d=byId('dialog');if(d.open)d.close();d.classList.toggle('wide',wide);d.innerHTML=`<div class="modal-head"><h2 id="dialogTitle">${esc(title)}</h2><button class="icon-btn ghost" aria-label="Close dialog" onclick="N.close()">${icon('close')}</button></div><div class="modal-content">${body}</div>${footer?`<div class="modal-foot">${footer}</div>`:''}`;d.showModal();}
+ function close(){pendingClaimDeletion=null;dataAdminDialogOpen=false;byId('dialog').close();lastFocus?.focus?.();}
  function menu(open){byId('sidebar').classList.toggle('open',open);byId('mobileScrim').classList.toggle('open',open);}
  function badge(s){const i=statuses.indexOf(cleanStatus(s)),col=i===0?'':i===1?'blue':i===2?'amber':'sage';return `<span class="badge ${col}">${esc(statusShort[i]||s)}</span>`;}
  function footer(){return `<div class="status-footer"><span id="saveHint"></span><span>Nova Claims 3.0 · Built for better repair journeys</span></div>`;}
@@ -517,7 +518,7 @@ const N = (() => {
  <div class="notice section-space flex">${icon('shield')}<span>Drafts save automatically in this browser. ${user?'Use <strong>Save to live</strong> when your changes are ready to share.':'Sign in to open and update your existing live claims.'}</span></div>`;}
  function field(id,label,type='text',placeholder='',extra=''){const v=claim()[id]??'';if(['surveyorNotes','regionalVariance','vat'].includes(id)&&!canEditSchedule())extra+=' readonly';if(user&&!isStaff()&&['claimRef','claimantName','propertyAddress'].includes(id))extra+=' readonly';return `<div class="field"><label for="${id}">${label}</label>${type==='textarea'?`<textarea id="${id}" data-field="${id}" placeholder="${esc(placeholder)}" ${extra}>${esc(v)}</textarea>`:`<input id="${id}" data-field="${id}" type="${type}" value="${esc(v)}" placeholder="${esc(placeholder)}" ${extra}>`}</div>`;}
  function tbrnAssignmentFields(){const required=needsTbrnAssignments(claim(),active().remote?claim():null);return tbrnAssignments.map(([key,label])=>field(key,label+(required?' <span class="muted" aria-hidden="true">*</span>':''),'text',isStaff()?"Enter staff member’s name":'Not assigned',`${!canManage()?'readonly':''} ${required?'required aria-required="true"':''} maxlength="120" aria-describedby="tbrnAssignmentHelp"`)).join('')+`<p id="tbrnAssignmentHelp" class="small muted" style="margin-bottom:0">${isStaff()?(required?'Both TBRN roles must be assigned before saving this claim to live.':'Assign the TBRN team responsible for this claim.'):user?'TBRN staff manage these assignments.':'Sign in as TBRN staff to assign the claim team.'}</p>`;}
- function detailsView(){const p=claim(),types=['Impact Damage','Escape of Water','Fire / Smoke','Storm Damage','Subsidence','Other'];if(!types.includes(p.claimType))types.push(p.claimType);return head('Claim details','The people, property and instructions behind this repair.',saveButton())+localClaimDraftNotice()+completionCodePanel()+scheduleVersionsPanel()+
+ function detailsView(){const p=claim(),types=['Impact Damage','Escape of Water','Fire / Smoke','Storm Damage','Subsidence','Other'];if(!types.includes(p.claimType))types.push(p.claimType);return head('Claim details','The people, property and instructions behind this repair.',claimDeleteButton(active())+saveButton())+localClaimDraftNotice()+completionCodePanel()+scheduleVersionsPanel()+
  `<div class="details-grid"><div class="card"><div class="card-head"><div><h2>Property &amp; claimant</h2><p>Core details appear on your schedule and reports.</p></div>${icon('file')}</div><div class="card-body"><fieldset ${!canEdit()?'disabled':''}><div class="grid2">${field('claimRef','Claim reference','text','e.g. TPD-000123',active().remote?'readonly title="Live claim references cannot be changed"':'')}${field('claimantName','Claimant / policyholder','text','Full name')}</div>${field('propertyAddress','Property address','textarea','Full property address and postcode')}<div class="field"><label for="claimType">Claim type</label><select id="claimType" data-field="claimType" ${user&&!isStaff()?'disabled':''}>${types.map(v=>`<option ${p.claimType===v?'selected':''}>${esc(v)}</option>`).join('')}</select></div><div class="subsection">${field('surveyorNotes','Scope & surveyor notes','textarea','Reinstatement requirements, access and specification')}</div></fieldset></div></div>
  <div><div class="card"><div class="card-head"><div><h2>Assignment &amp; progress</h2><p>Assign the TBRN team and manage progress.</p></div>${badge(p.scheduleStatus)}</div><div class="card-body">${tbrnAssignmentFields()}<div class="subsection"><label>Assigned contractor</label><div class="notice">${esc(p.assignedContractorName||p.assignedContractor||'No contractor assigned')}<div class="small muted">${esc(p.assignedContractorName?p.assignedContractor:'Choose a contractor from the directory.')}</div></div><div class="actions">${canManage()?btn('Choose contractor',"N.nav('contractors')",'people','sm'):''}${p.assignedContractor?btn('Email draft','N.assignmentEmail()','mail','sm'):''}</div></div><div class="subsection"><label>Current stage</label><div class="flex between">${badge(p.scheduleStatus)}${canWorkSchedule()?btn('Update status','N.statusDialog()','edit','sm'):''}</div></div></div></div>
  <div class="card section-space"><div class="card-head"><div><h2>Pricing adjustments</h2><p>Applied to the net schedule total.</p></div></div><div class="card-body"><fieldset ${!canEditSchedule()?'disabled':''}><label>Regional variance preset</label><div class="segmented" style="margin-bottom:17px">${[0,15,30].map(n=>btn(n+'%',`N.variance(${n})`,'',num(p.regionalVariance)===n?'active':'')).join('')}</div><div class="grid2">${field('regionalVariance','Regional variance %','number','0','step="0.1" min="-100"')}${field('vat','VAT %','number','20','step="0.1" min="0"')}</div></fieldset><div class="small muted">The original calculation is retained: net + regional variance, then VAT.</div></div></div></div></div>`;}
@@ -675,12 +676,103 @@ const N = (() => {
   rows.sort((a,b)=>claimSort==='reference'?String(a.payload.claimRef).localeCompare(String(b.payload.claimRef)):claimSort==='value'?totals(b.payload).gross-totals(a.payload).gross:new Date(b.updatedAt)-new Date(a.updatedAt));
   const count=rows.length+' of '+records.length+(shared?' live claims':' saved claims');
   if(!rows.length){notice(claimQuery?'No matching claims':shared?'No live claims saved':'No saved claims',claimQuery?'Try another reference, claimant, address or postcode.':shared?'Claims appear here after they have been saved to live.':'Local drafts are only available on this computer.',claimQuery?btn('Clear search',"N.claimSearch('')",'search'):shared?btn('Refresh','N.loadLiveClaims()','refresh'):'',count);return;}
-  b.innerHTML=rows.map(c=>`<tr><td><div class="row-title">${esc(c.payload.claimRef||'Untitled claim')}</div><div class="row-subtitle">${esc(c.payload.claimantName||'No claimant')} · ${esc(c.payload.propertyAddress||'No address')}</div></td><td>${shared?badge(c.payload.scheduleStatus):localClaimStatus(c)}</td><td class="num">${money(totals(c.payload).gross)}</td><td class="small muted">${time(c.updatedAt)}</td><td><div class="actions">${btn('Open',!shared?`N.openLocal('${c.id}')`:`N.openLiveIndex(${liveRecords.indexOf(c)})`,'arrow','sm')}${!shared?localClaimDraftAction(c)+btn('',`N.removeLocal('${c.id}')`,'trash','sm ghost'):''}</div></td></tr>`).join('');
+  b.innerHTML=rows.map(c=>`<tr><td><div class="row-title">${esc(c.payload.claimRef||'Untitled claim')}</div><div class="row-subtitle">${esc(c.payload.claimantName||'No claimant')} · ${esc(c.payload.propertyAddress||'No address')}</div></td><td>${shared?badge(c.payload.scheduleStatus):localClaimStatus(c)}</td><td class="num">${money(totals(c.payload).gross)}</td><td class="small muted">${time(c.updatedAt)}</td><td><div class="actions">${btn('Open',!shared?`N.openLocal('${c.id}')`:`N.openLiveIndex(${liveRecords.indexOf(c)})`,'arrow','sm')}${!shared?localClaimDraftAction(c)+(c.remote?.id?btn('Remove local copy',`N.removeLocal('${c.id}')`,'','sm ghost'):''):''}${claimDeleteButton(c,shared)}</div></td></tr>`).join('');
   if(status)status.textContent=count;
  }
  function setClaimScope(v){if(!['local','live'].includes(v))return;claimScope=v;render();}
  function claimSearch(v){claimQuery=v;const input=byId('claimSearch');if(input&&input.value!==v)input.value=v;renderClaimRows();}
  function setClaimSort(v){claimSort=v;renderClaimRows();}
+ // Destructive claim actions require a server-confirmed management role and an explicit target.
+ let pendingClaimDeletion=null,claimDeleteBusy=false;
+ function claimDeleteButton(record,shared=false){
+  if(!canAdmin()||!record||!canAccess(record.payload))return '';
+  const action='N.requestClaimDeletion('+JSON.stringify(record.id)+','+shared+')';
+  return btn(shared||record.remote?.id?'Delete claim':'Delete draft',esc(action),'trash','danger sm');
+ }
+ function clearClaimDeletionAccess(){
+  if(pendingClaimDeletion){pendingClaimDeletion=null;byId('dialog').close();byId('dialog').innerHTML='';}
+ }
+ function claimDeletionCurrent(target){
+  return pendingClaimDeletion===target&&target.account===user&&target.epoch===staffAccessEpoch&&canAdmin()&&byId('dialog').open;
+ }
+ function claimDeletionMessage(message){const el=byId('claimDeleteMessage');if(el)el.textContent=message;}
+ function updateClaimDeleteConfirmation(){
+  const target=pendingClaimDeletion,button=byId('claimDeleteConfirmButton');
+  if(button)button.disabled=!target||!claimDeletionCurrent(target)||!target.ready||liveBusy||claimDeleteBusy||byId('claimDeleteConfirmation')?.value.trim()!==target.confirmation;
+ }
+ function showClaimDeletion(target){
+  const p=target.payload,shared=!!target.liveId,versions=scheduleHistory(p).length;
+  const warning=shared?(target.missing?'This live claim has already been deleted. Confirm to remove its linked copies and drafts saved in this browser.':'This permanently deletes the live claim and all its saved schedule versions for everyone. Linked copies and drafts saved in this browser will also be removed.'):'This permanently deletes this local draft and its saved schedules from this browser. Any separate live claim is unaffected.';
+  modal(shared?'Delete live claim':'Delete local draft',`<div class="notice warn">${warning}</div><dl class="claim-delete-summary"><dt>Claim reference</dt><dd>${esc(p.claimRef||'Untitled claim')}</dd><dt>Claimant</dt><dd>${esc(p.claimantName||'Not entered')}</dd><dt>Property</dt><dd>${esc(p.propertyAddress||'Not entered')}</dd><dt>Saved schedule versions</dt><dd>${versions}</dd></dl><p class="small muted">There is no undo for this action. Downloaded reports, backups and copies on other devices are not erased.</p><div class="field"><label for="claimDeleteConfirmation">Type <strong>${esc(target.confirmation)}</strong> to confirm</label><input id="claimDeleteConfirmation" autocomplete="off" spellcheck="false" oninput="N.updateClaimDeleteConfirmation()"></div><div id="claimDeleteMessage" class="small" role="alert" aria-live="polite"></div>`,btn('Cancel','N.close()')+`<button id="claimDeleteConfirmButton" class="danger" disabled onclick="N.confirmClaimDeletion()">${icon('trash')}${target.missing?'Remove cached copies':shared?'Delete claim permanently':'Delete draft permanently'}</button>`);
+  pendingClaimDeletion=target;target.ready=true;updateClaimDeleteConfirmation();byId('claimDeleteConfirmation').focus();
+ }
+ async function requestClaimDeletion(recordId=store.activeId,shared=false){
+  if(!canAdmin()){toast('Only TBRN Admin / Management can delete claims.',true);return false;}
+  if(liveBusy||claimDeleteBusy){toast('Wait for the current live operation to finish.',true);return false;}
+  const record=(shared===true?liveRecords:store.claims).find(r=>r.id===recordId);
+  if(!record||!canAccess(record.payload))return false;
+  if(!persist()){toast('Browser storage is unavailable. Save a backup before deleting a claim.',true);return false;}
+  const target={account:user,epoch:staffAccessEpoch,localId:shared===true?'':record.id,liveId:shared===true?record.id:record.remote?.id||'',payload:clone(record.payload),localSignature:JSON.stringify(canonical(record.payload)),ready:false,missing:false};
+  target.confirmation=String(target.payload.claimRef||'').trim()||'DELETE';
+  if(!target.liveId){showClaimDeletion(target);return true;}
+  modal('Delete live claim','<p>Checking the latest live claim…</p><div id="claimDeleteMessage" class="small" role="alert" aria-live="polite"></div>',btn('Cancel','N.close()'));
+  pendingClaimDeletion=target;
+  try{
+   const snapshot=await live.F.getDocFromServer(live.F.doc(live.db,'claims',target.liveId));
+   if(!claimDeletionCurrent(target))return false;
+   if(snapshot.metadata?.fromCache||snapshot.metadata?.hasPendingWrites)throw new Error('The latest saved claim could not be confirmed.');
+   target.missing=!snapshot.exists();
+   if(!target.missing){const data=snapshot.data();target.serverSignature=JSON.stringify(canonical(data));target.payload=normalise(data);target.confirmation=String(target.payload.claimRef||'').trim()||'DELETE';}
+   showClaimDeletion(target);return true;
+  }catch(error){if(claimDeletionCurrent(target))claimDeletionMessage('Could not prepare this claim for deletion. Check your connection and try again. '+(error.message||''));return false;}
+ }
+ function removeDeletedClaimCopies(target){
+  const before={claims:store.claims,activeId:store.activeId,activity:store.activity};
+  store.claims=store.claims.filter(record=>target.liveId?record.remote?.id!==target.liveId:record.id!==target.localId);
+  if(!store.claims.length)store.claims.push({id:uid(),payload:newPayload(),updatedAt:now(),origin:'Local draft',remote:null,dirty:false});
+  if(!store.claims.some(record=>record.id===store.activeId))store.activeId=(store.claims.find(record=>canAccess(record.payload))||store.claims[0]).id;
+  store.activity=[{text:target.liveId?'Live claim deleted by '+target.account.email:'Local draft deleted by '+target.account.email,at:now(),ref:target.payload.claimRef||'Untitled claim'},...store.activity].slice(0,40);
+  const saved=persist();
+  if(!saved&&!target.liveId){Object.assign(store,before);updateSaveHint();return false;}
+  undoStack=[];redoStack=[];pendingDuplicate=null;duplicateLookupSerial++;pendingVariation=null;pendingChangeReport=null;pendingEmail=null;liveOpenRequest++;
+  resetLiveClaims();clearContractorClaimSelection();room='all';rateRoom=claim().rooms[0];
+  byId('printArea').innerHTML='';byId('printArea').hidden=true;
+  return saved;
+ }
+ async function confirmClaimDeletion(){
+  const target=pendingClaimDeletion;
+  if(!target||!claimDeletionCurrent(target)||!target.ready||claimDeleteBusy||liveBusy)return false;
+  if(byId('claimDeleteConfirmation')?.value.trim()!==target.confirmation){claimDeletionMessage('Type the displayed claim reference exactly to confirm deletion.');return false;}
+  if(!persist()){claimDeletionMessage('Browser storage is unavailable. Deletion has not started.');return false;}
+  claimDeleteBusy=true;liveBusy=true;updateClaimDeleteConfirmation();updateSaveHint();
+  const button=byId('claimDeleteConfirmButton');if(button)button.textContent='Deleting…';
+  try{
+   if(target.liveId){
+    const {F,db}=live,ref=F.doc(db,'claims',target.liveId);
+    await F.runTransaction(db,async transaction=>{
+     if(!claimDeletionCurrent(target))throw new Error('The account or deletion confirmation changed.');
+     const snapshot=await transaction.get(ref);
+     if(!claimDeletionCurrent(target))throw new Error('The account or deletion confirmation changed.');
+     if(!snapshot.exists())return;
+     if(target.missing||JSON.stringify(canonical(snapshot.data()))!==target.serverSignature)throw new Error('This claim changed after the confirmation was opened. Close this dialog and review the latest claim before deleting it.');
+     transaction.delete(ref);
+    });
+   }else{
+    const record=store.claims.find(r=>r.id===target.localId);
+    if(!record||record.remote||JSON.stringify(canonical(record.payload))!==target.localSignature)throw new Error('This draft changed after the confirmation was opened. Close this dialog and review it before deleting.');
+   }
+   const saved=removeDeletedClaimCopies(target);
+   if(!saved&&!target.liveId)throw new Error('The browser could not save the deletion. Your draft has been kept.');
+   const sameSession=target.account===user&&target.epoch===staffAccessEpoch&&canAdmin();
+   if(pendingClaimDeletion===target)close();
+   if(sameSession){claimScope=target.liveId?'live':'local';nav('claims');toast(!saved?'The live claim was deleted, but this browser could not save its cleanup. Cached copies may reappear after a reload; they cannot save back to the deleted claim.':target.liveId?'Live claim deleted: '+(target.payload.claimRef||'Untitled claim'):'Local draft deleted.',!saved);}else render();
+   return true;
+  }catch(error){
+   if(claimDeletionCurrent(target)){target.ready=false;claimDeletionMessage('Deletion was not completed or confirmed. '+(error.message||'Refresh the live claim before trying again.'));}
+   return false;
+  }finally{claimDeleteBusy=false;liveBusy=false;updateSaveHint();updateClaimDeleteConfirmation();}
+ }
+
  function removeLocal(id){const r=store.claims.find(x=>x.id===id);if(!r||!canAccess(r.payload)||!confirm('Remove this local copy? The live claim and legacy browser records will not be deleted.'))return;store.claims=store.claims.filter(x=>x.id!==id);if(!store.claims.length){const c={id:uid(),payload:newPayload(),updatedAt:now(),remote:null,dirty:false};store.claims.push(c);}if(store.activeId===id)store.activeId=store.claims[0].id;undoStack=[];redoStack=[];persist();render();}
  function findClaim(){if(isStaff()){claimScope='live';claimQuery='';close();nav('claims');byId('claimSearch')?.focus();return;}modal('Find a claim',`<p class="small muted">Open a saved local reference or search live claims after signing in.</p><div class="field"><label for="findRef">Claim reference</label><input id="findRef" placeholder="e.g. TPD-000123" onkeydown="if(event.key==='Enter')N.searchClaim()"></div><div class="field"><label for="findSource">Search in</label><select id="findSource"><option value="local" ${!user?'selected':''}>Local drafts</option><option value="live" ${user?'selected':''}>Live claims</option></select></div><div id="findMessage" class="small muted"></div>`,btn('Cancel','N.close()')+btn('Search','N.searchClaim()','search','primary'));byId('findRef').focus();}
  async function searchClaim(){const ref=byId('findRef').value.trim();if(!ref)return;const local=localClaimsForDisplay().find(x=>lower(x.payload.claimRef)===lower(ref)&&canAccess(x.payload));if(byId('findSource').value==='local'){if(local){close();openLocal(local.id);}else byId('findMessage').textContent='No local match. Choose Live claims to search the shared system.';return;}if(!user){byId('findMessage').textContent='Sign in to search your live claims.';return;}byId('findMessage').textContent='Searching live claims…';await loadLiveRef(ref);}
@@ -1032,7 +1124,7 @@ const N = (() => {
  window.addEventListener('storage',e=>{if(e.key===KEY&&!localTabConflict){localTabConflict=true;toast('This workspace changed in another tab. Download a backup before continuing so both copies are kept.',true);}});
  function reconnect(){return restoreSession();}
  function init(){initAppShell();try{page=sessionStorage.getItem('novaViewV5')||'overview';}catch{}if(!navItems.some(n=>n[0]===page)&&page!=='data')page='overview';restoringSession=hasSavedSession();render();persist();if(migrated&&verifiedEmail())toast('Previous local schedules recovered.');if(restoringSession)return restoreSession();}
- const api={reviewLocalClaimDrafts,openSavedClaimDraft,refreshContractorHub,refreshContractorAccess,loadContractorAccounts,contractorAccessSearch,viewContractorAccess,retryContractorClaims,closeContractorAccess,openContractorAccessClaim,retryStaffAccess,loadStaffAccounts,saveStaffLevel,init,nav,menu,close,help,account,setAuthMode,authRoleChanged,togglePassword,resetPassword,signIn,signOut,reconnect,restoreSession,sendVerification,checkVerification,saveLive,findClaim,searchClaim,newClaim,openLocal,removeLocal,loadLiveClaims,openLiveIndex,claimScope:setClaimScope,claimSearch,claimSort:setClaimSort,setRoom,roomDialog,saveRoom,deleteRoom,ratesForRoom,manualDialog,addManual,removeLine,duplicateLine,moveLine,moveLineTo,undo,redo,clearSchedule,variance,rateSearch,rateTrade,rateFavorites,rateNext,setRateRoom,favorite,addRate,toggleRateAdmin,editRate,saveRate,contractorSearch,contractorFilter,contractorDialog,saveContractor,assignDialog,assignContractor,assignmentEmail,copyEmail,openEmail,reportMode,printReport,previewCpp,exportCSV,exportBackup,exportClaim,importBackup,commitImport,recoverLegacy,importContractors,statusDialog,updateStatus,copyCompletionCode,duplicateDialog,lookupDuplicateCode,createDuplicateClaim,variationDialog,startVariation,previewScheduleVersion,printScheduleVersion,changeReportDialog,refreshChangeReport,printChangeReport};
+ const api={requestClaimDeletion,confirmClaimDeletion,updateClaimDeleteConfirmation,reviewLocalClaimDrafts,openSavedClaimDraft,refreshContractorHub,refreshContractorAccess,loadContractorAccounts,contractorAccessSearch,viewContractorAccess,retryContractorClaims,closeContractorAccess,openContractorAccessClaim,retryStaffAccess,loadStaffAccounts,saveStaffLevel,init,nav,menu,close,help,account,setAuthMode,authRoleChanged,togglePassword,resetPassword,signIn,signOut,reconnect,restoreSession,sendVerification,checkVerification,saveLive,findClaim,searchClaim,newClaim,openLocal,removeLocal,loadLiveClaims,openLiveIndex,claimScope:setClaimScope,claimSearch,claimSort:setClaimSort,setRoom,roomDialog,saveRoom,deleteRoom,ratesForRoom,manualDialog,addManual,removeLine,duplicateLine,moveLine,moveLineTo,undo,redo,clearSchedule,variance,rateSearch,rateTrade,rateFavorites,rateNext,setRateRoom,favorite,addRate,toggleRateAdmin,editRate,saveRate,contractorSearch,contractorFilter,contractorDialog,saveContractor,assignDialog,assignContractor,assignmentEmail,copyEmail,openEmail,reportMode,printReport,previewCpp,exportCSV,exportBackup,exportClaim,importBackup,commitImport,recoverLegacy,importContractors,statusDialog,updateStatus,copyCompletionCode,duplicateDialog,lookupDuplicateCode,createDuplicateClaim,variationDialog,startVariation,previewScheduleVersion,printScheduleVersion,changeReportDialog,refreshChangeReport,printChangeReport};
  return api;
 })();
 window.N=N;
