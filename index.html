@@ -51,6 +51,7 @@
 @media(max-width:600px){.claim-settings-toggle{width:44px;height:44px}.claim-settings-menu button{min-height:44px}}
 @media print{.claim-settings-menu{display:none!important}}
 
+#changeAccountPasswordFields{border:0;padding:0;margin:0;min-width:0}#changeAccountPasswordFields .field{margin-bottom:16px}.password-account-email{overflow-wrap:anywhere;padding:12px 14px;background:#f2f6f3;border-radius:8px}
 </style>
 </head>
 <body class="auth-screen">
@@ -229,7 +230,7 @@ const N = (() => {
  const canEditCpp=()=>canEdit()&&canWorkSchedule();
  function allowBuildSchedules(){if(canBuildSchedules())return true;toast('Schedule changes require Surveyor / Reviewer or Admin / Management access.',true);return false;}
  function staffLevelLabel(){return staffReady()?staffLevels[staffLevel()]:'Staff access unavailable';}
- function clearStaffAccess(){clearClaimDeletionAccess();clearDataAdminAccess();clearContractorAccess();staffAccessEpoch++;if(staffAccessStop)staffAccessStop();staffAccessStop=null;staffAccessPromise=null;staffAccess={uid:'',ready:false,level:'',error:''};staffAccounts=[];staffAccountsError='';staffAccountsBusy=false;staffAccountsRequest++;rateAdmin=false;}
+ function clearStaffAccess(){clearPasswordDialog(true);clearClaimDeletionAccess();clearDataAdminAccess();clearContractorAccess();staffAccessEpoch++;if(staffAccessStop)staffAccessStop();staffAccessStop=null;staffAccessPromise=null;staffAccess={uid:'',ready:false,level:'',error:''};staffAccounts=[];staffAccountsError='';staffAccountsBusy=false;staffAccountsRequest++;rateAdmin=false;}
  function resolvedStaffLevel(snapshot,account){
   if(!snapshot.exists())return 'concierge';
   const data=snapshot.data();
@@ -379,7 +380,7 @@ const N = (() => {
   if(contractorAccountsState==='loading')return '<tr><td colspan="5" role="status">Loading contractor accounts…</td></tr>';
   if(contractorAccountsState==='error')return `<tr><td colspan="5"><div class="notice warn" role="alert">${esc(contractorAccountsError)}</div>${btn('Try again','N.loadContractorAccounts()','refresh','sm')}</td></tr>`;
   const query=norm(contractorAccountsQuery),rows=contractorAccounts.map((entry,index)=>({entry,index})).filter(({entry})=>!query||contractorAccountSearchText(entry).includes(query));
-  return rows.map(({entry,index})=>`<tr><td><strong>${esc(entry.contractorName||'Contractor account')}</strong><div class="row-subtitle">Registered ${time(entry.createdAt)}</div></td><td class="contractor-account-email">${esc(entry.email)}<div class="row-subtitle">Assigned claims only</div></td><td>${contractorHubContact(entry)}</td><td>${contractorHubAvailability(entry)}</td><td>${btn(contractorAccessSelection?.id===entry.id?'Refresh claims':'View claims',`N.viewContractorAccess(${index})`,'file','sm')}</td></tr>`).join('')||`<tr><td colspan="5">${empty(query?'No matching contractor accounts':'No contractor accounts yet',query?'Try a company name, email address, phone number or status.':'Contractors appear here after they register an account.',query?btn('Clear search',"N.contractorAccessSearch('')",'search','sm'):'','people')}</td></tr>`;
+  return rows.map(({entry,index})=>`<tr><td><strong>${esc(entry.contractorName||'Contractor account')}</strong><div class="row-subtitle">Registered ${time(entry.createdAt)}</div></td><td class="contractor-account-email">${esc(entry.email)}<div class="row-subtitle">Assigned claims only</div></td><td>${contractorHubContact(entry)}</td><td>${contractorHubAvailability(entry)}</td><td><div class="actions">${btn(contractorAccessSelection?.id===entry.id?'Refresh claims':'View claims',`N.viewContractorAccess(${index})`,'file','sm')}${passwordResetButton(entry,'contractor')}</div></td></tr>`).join('')||`<tr><td colspan="5">${empty(query?'No matching contractor accounts':'No contractor accounts yet',query?'Try a company name, email address, phone number or status.':'Contractors appear here after they register an account.',query?btn('Clear search',"N.contractorAccessSearch('')",'search','sm'):'','people')}</td></tr>`;
  }
  function contractorAssignedSection(){
   if(!canAdmin()||!contractorAccessSelection)return '';
@@ -437,10 +438,10 @@ const N = (() => {
 
  function staffAccessView(){
   if(!canAdmin())return '';
-  return head('Staff access','Set the access level for each TBRN staff account.',btn('Refresh','N.loadStaffAccounts()','refresh'))+
+  return head('Staff access','Manage staff access and send password reset links.',btn('Refresh','N.loadStaffAccounts()','refresh'))+
    `<div class="card pad"><table class="role-matrix"><thead><tr><th>Access level</th><th>Permissions</th></tr></thead><tbody><tr><td>Claims Concierge</td><td>View all claims, schedules, rates and reports. Create claims and manage details and assignments.</td></tr><tr><td>Surveyor / Reviewer</td><td>Concierge access, plus build and amend schedules, approve work and create variations.</td></tr><tr><td>Admin / Management</td><td>Full access, including the rate library and staff permissions.</td></tr></tbody></table><p class="small muted">New accounts start with Claims Concierge access. Your own management level cannot be changed here.</p></div>`+
    (staffAccountsError?`<div class="notice warn section-space" role="alert">${esc(staffAccountsError)}</div>`:'')+
-   `<div class="card section-space"><div class="table-container"><table><thead><tr><th>Staff member</th><th>Requested level</th><th>Current access</th><th></th></tr></thead><tbody>${staffAccounts.map((entry,index)=>`<tr><td><strong>${esc(entry.email)}</strong>${entry.id===user.uid?'<div class="row-subtitle">Your account</div>':''}</td><td>${esc(staffLevels[entry.requestedStaffLevel]||'—')}</td><td><select id="staffLevel${index}" aria-label="Access level for ${esc(entry.email)}" ${entry.id===user.uid||staffRoleSaving?'disabled':''}>${staffLevelOptions(entry.level)}</select></td><td>${entry.id===user.uid?'':`<button class="sm primary" ${staffRoleSaving?'disabled':''} onclick="N.saveStaffLevel(${index})">Save access</button>`}</td></tr>`).join('')||`<tr><td colspan="4">${staffAccountsBusy?'Loading staff accounts…':'No staff profiles found. Staff appear here after creating an account.'}</td></tr>`}</tbody></table></div></div>`;
+   `<div class="card section-space"><div class="table-container"><table><thead><tr><th>Staff member</th><th>Requested level</th><th>Current access</th><th></th></tr></thead><tbody>${staffAccounts.map((entry,index)=>`<tr><td><strong>${esc(entry.email)}</strong>${entry.id===user.uid?'<div class="row-subtitle">Your account</div>':''}</td><td>${esc(staffLevels[entry.requestedStaffLevel]||'—')}</td><td><select id="staffLevel${index}" aria-label="Access level for ${esc(entry.email)}" ${entry.id===user.uid||staffRoleSaving?'disabled':''}>${staffLevelOptions(entry.level)}</select></td><td><div class="actions">${entry.id===user.uid?'':`<button class="sm primary" ${staffRoleSaving?'disabled':''} onclick="N.saveStaffLevel(${index})">Save access</button>`}${passwordResetButton(entry,'staff')}</div></td></tr>`).join('')||`<tr><td colspan="4">${staffAccountsBusy?'Loading staff accounts…':'No staff profiles found. Staff appear here after creating an account.'}</td></tr>`}</tbody></table></div></div>`;
  }
  async function loadStaffAccounts(){
   if(!canAdmin()||staffAccountsBusy)return;
@@ -533,15 +534,15 @@ const N = (() => {
   }
  }
 
- function modal(title,body,footer='',wide=false){closeClaimSettings(true);pendingClaimDeletion=null;dataAdminDialogOpen=false;lastFocus=document.activeElement;const d=byId('dialog');if(d.open)d.close();d.classList.toggle('wide',wide);d.innerHTML=`<div class="modal-head"><h2 id="dialogTitle">${esc(title)}</h2><button class="icon-btn ghost" aria-label="Close dialog" onclick="N.close()">${icon('close')}</button></div><div class="modal-content">${body}</div>${footer?`<div class="modal-foot">${footer}</div>`:''}`;d.showModal();}
- function close(){pendingClaimDeletion=null;dataAdminDialogOpen=false;byId('dialog').close();lastFocus?.focus?.();}
+ function modal(title,body,footer='',wide=false){clearPasswordDialog();closeClaimSettings(true);pendingClaimDeletion=null;dataAdminDialogOpen=false;lastFocus=document.activeElement;const d=byId('dialog');if(d.open)d.close();d.classList.toggle('wide',wide);d.innerHTML=`<div class="modal-head"><h2 id="dialogTitle">${esc(title)}</h2><button class="icon-btn ghost" aria-label="Close dialog" onclick="N.close()">${icon('close')}</button></div><div class="modal-content">${body}</div>${footer?`<div class="modal-foot">${footer}</div>`:''}`;d.showModal();}
+ function close(){clearPasswordDialog();pendingClaimDeletion=null;dataAdminDialogOpen=false;byId('dialog').close();lastFocus?.focus?.();}
  function menu(open){byId('sidebar').classList.toggle('open',open);byId('mobileScrim').classList.toggle('open',open);}
  function badge(s){const i=statuses.indexOf(cleanStatus(s)),col=i===0?'':i===1?'blue':i===2?'amber':'sage';return `<span class="badge ${col}">${esc(statusShort[i]||s)}</span>`;}
  function footer(){return `<div class="status-footer"><span id="saveHint"></span><span>Nova Claims 3.0 · Built for better repair journeys</span></div>`;}
  function head(title,sub,buttons=''){return `<div class="page-head"><div><div class="eyebrow" style="margin-bottom:8px">${page==='overview'||page==='contractor-access'||!canAccess(claim())?'YOUR WORKSPACE':esc(claim().claimRef||'UNTITLED CLAIM')}</div><h1>${title}</h1><p>${sub}</p></div><div class="actions">${buttons}</div></div>`;}
  const btn=(text,action,ico='',style='')=>`<button class="${style}" onclick="${action}">${ico?icon(ico):''}${text}</button>`;
  function saveButton(){return `<button id="liveSaveButton" class="primary" onclick="N.saveLive()">${icon(user?'cloud':'save')}${liveBusy?'Saving…':user?'Save to live':'Save draft'}</button>`;}
- function nav(view){if(!verifiedEmail()||restoringSession){render();return;}if(!navItems.some(n=>n[0]===view)&&view!=='data')view='overview';if(!canView(view)){toast('Your account does not have access to this page.',true);return;}if(page==='contractor-access'&&view!==page){clearContractorClaimSelection();stopContractorHub();}page=view;menu(false);render();if(view==='staff')loadStaffAccounts();window.scrollTo({top:0,behavior:'instant'});try{sessionStorage.setItem('novaViewV5',view);}catch{}}
+ function nav(view){if(!verifiedEmail()||restoringSession){render();return;}if(!navItems.some(n=>n[0]===view)&&view!=='data')view='overview';if(!canView(view)){toast('Your account does not have access to this page.',true);return;}if(page==='contractor-access'&&view!==page){clearContractorClaimSelection();stopContractorHub();}if(passwordDialog)close();page=view;menu(false);render();if(view==='staff')loadStaffAccounts();window.scrollTo({top:0,behavior:'instant'});try{sessionStorage.setItem('novaViewV5',view);}catch{}}
  function viewLabel(view){return view==='claims'&&isStaff()?'All claims':navItems.find(n=>n[0]===view)?.[2]||'Data & backup';}
  function top(){byId('dataManagementNav').hidden=!canAdmin();byId('connectionBadge').innerHTML=`<i class="dot ${user?'live':''}"></i><span>${esc(user?'Live connected':liveState)}</span>`;byId('accountLabel').textContent=user?user.email:'Sign in';byId('avatar').textContent=user?user.email.slice(0,2).toUpperCase():'NC';byId('mainNav').innerHTML=navItems.filter(n=>canView(n[0])).map(n=>`<button class="nav-item ${page===n[0]?'active':''}" data-view="${n[0]}" onclick="N.nav('${n[0]}')">${icon(n[1])}${viewLabel(n[0])}${n[0]==='rates'?`<span class="nav-count">${rateList.length}</span>`:n[0]==='schedule'&&canAccess(claim())?`<span class="nav-count">${claim().schedule.length}</span>`:''}</button>`).join('');document.querySelectorAll('[data-view="data"]').forEach(b=>b.classList.toggle('active',page==='data'));byId('breadcrumb').textContent=viewLabel(page);}
 
@@ -1084,7 +1085,113 @@ const N = (() => {
   catch(e){if(e.code==='auth/user-not-found')authNotice='If an account uses this email address, a password reset link has been requested. Check your inbox and junk folder.';else authError=e.code==='auth/too-many-requests'?'Too many requests. Please wait before trying again.':e.code==='auth/network-request-failed'?'We could not connect. Check your connection and try again.':e.message||'The password reset could not be requested. Please try again.';}
   finally{authBusy=false;if(!user)renderAuthHome();}
  }
- function account(){if(!verifiedEmail()||restoringSession){render();return;}modal('Your TBRN account',`<div class="flex" style="margin-bottom:20px"><span class="avatar" style="width:42px;height:42px;font-size:15px">${esc(user.email.slice(0,2).toUpperCase())}</span><div><strong>${esc(user.email)}</strong><div class="small muted">${isStaff()?esc(staffLevelLabel()):'Contractor · Assigned claims'}</div></div></div><div class="notice">Connected to the TBRN claims workspace.</div>`,btn('Close','N.close()')+btn('Sign out','N.signOut()','lock'));}
+ // Passwords stay in the Auth operation; they never enter claim/profile storage or backups.
+ let passwordDialog=null,passwordActionBusy=false;
+ const passwordResetRequests=new Map();
+ function wipePasswordInputs(){
+  for(const id of ['currentAccountPassword','newAccountPassword','confirmAccountPassword']){const input=byId(id);if(input)input.value='';}
+ }
+ function clearPasswordDialog(closeDialog=false){
+  const wasOpen=!!passwordDialog;passwordDialog=null;wipePasswordInputs();
+  if(closeDialog&&wasOpen){byId('dialog').close();byId('dialog').innerHTML='';}
+ }
+ function passwordSessionCurrent(target){
+  return !!target&&passwordDialog===target&&target.account===user&&live?.auth?.currentUser===user&&verifiedEmail()&&!restoringSession&&byId('dialog').open&&(target.kind!=='admin-reset'||target.epoch===staffAccessEpoch&&canAdmin());
+ }
+ function passwordActionMessage(message,error=false){
+  const el=byId('passwordActionMessage');if(!el)return;
+  el.textContent=message;el.hidden=!message;el.className=error?'notice warn small':'notice small';
+ }
+ function passwordActionError(error){
+  const code=String(error?.code||'');
+  if(['auth/wrong-password','auth/invalid-credential','auth/invalid-login-credentials'].includes(code))return 'Your current password was not recognised. Enter your passwords again and try once more.';
+  if(['auth/weak-password','auth/password-does-not-meet-requirements'].includes(code))return 'The new password does not meet the account requirements. Choose a stronger password and try again.';
+  if(code==='auth/too-many-requests')return 'Too many attempts. Please wait before trying again.';
+  if(code==='auth/network-request-failed'||code==='unavailable')return 'We could not confirm the request. Check your connection before trying again.';
+  if(['auth/requires-recent-login','auth/user-token-expired','auth/invalid-user-token','auth/user-disabled','auth/user-mismatch'].includes(code))return 'Your sign-in needs refreshing. Sign out and sign back in before trying again.';
+  if(code==='password/account-changed')return 'The registered account has changed or is unavailable. Close this window and refresh the account list.';
+  if(code==='password/admin-access'||code==='permission-denied')return 'Admin access could not be confirmed. Close this window and refresh your staff access.';
+  if(code==='auth/user-not-found')return 'A password reset could not be requested for this account. Check the registered sign-in email and account status.';
+  return 'The request could not be completed. Please try again; if this continues, contact TBRN support.';
+ }
+ function passwordResetButton(entry,scope){
+  if(!canAdmin()||!entry)return '';
+  const action='N.adminPasswordResetDialog('+JSON.stringify(scope)+','+JSON.stringify(entry.id)+')';
+  return btn('Reset password',esc(action),'lock','sm');
+ }
+ function adminPasswordResetDialog(scope,id){
+  if(!canAdmin()||live?.auth?.currentUser!==user)return false;
+  if(passwordActionBusy){toast('Wait for the current password request to finish.',true);return false;}
+  if(!['staff','contractor'].includes(scope)||page!==(scope==='staff'?'staff':'contractor-access'))return false;
+  const entry=(scope==='staff'?staffAccounts:contractorAccounts).find(entry=>entry.id===id),email=lower(entry?.email);
+  if(!entry||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return false;
+  const target={kind:'admin-reset',account:user,epoch:staffAccessEpoch,id:entry.id,email,scope,sent:false};
+  modal('Reset password',`<p>Send a secure password reset link to this registered sign-in email:</p><p class="password-account-email"><strong>${esc(email)}</strong></p><p class="small muted">They will choose their own new password using the link. Their current password stays unchanged until they complete the reset.</p><div id="passwordActionMessage" role="status" aria-live="polite" hidden></div>`,btn('Cancel','N.close()')+`<button id="adminPasswordResetButton" class="primary" onclick="N.sendAdminPasswordReset()">${icon('mail')}Send reset email</button>`);
+  passwordDialog=target;return true;
+ }
+ async function sendAdminPasswordReset(){
+  const target=passwordDialog;
+  if(target?.kind!=='admin-reset'||!passwordSessionCurrent(target)||passwordActionBusy||target.sent)return false;
+  const key=target.id+'|'+target.email,retryAt=passwordResetRequests.get(key)||0;
+  if(retryAt>Date.now()){passwordActionMessage('A reset was requested recently. Please wait '+Math.ceil((retryAt-Date.now())/1000)+' seconds before requesting another email.',true);return false;}
+  passwordActionBusy=true;
+  const button=byId('adminPasswordResetButton');button.disabled=true;button.textContent='Checking account…';passwordActionMessage('');
+  try{
+   const {F,A,db,auth}=live;
+   const [role,profile]=await Promise.all([F.getDocFromServer(F.doc(db,'staffAccess',target.account.uid)),F.getDocFromServer(F.doc(db,'users',target.id))]);
+   if(!passwordSessionCurrent(target))return false;
+   if(role.metadata?.fromCache||role.metadata?.hasPendingWrites||!role.exists()||lower(role.data().email)!==lower(target.account.email)||role.data().level!=='admin')throw {code:'password/admin-access'};
+   if(profile.metadata?.fromCache||profile.metadata?.hasPendingWrites||!profile.exists()||lower(profile.data().email)!==target.email)throw {code:'password/account-changed'};
+   button.textContent='Requesting reset…';
+   await A.sendPasswordResetEmail(auth,target.email);
+   passwordResetRequests.set(key,Date.now()+60000);
+   if(!passwordSessionCurrent(target))return false;
+   target.sent=true;button.textContent='Reset requested';
+   passwordActionMessage('Reset request accepted for '+target.email+'. Ask them to check their inbox, junk folder and work email quarantine. This confirms the request, not email delivery.');return true;
+  }catch(error){
+   if(error?.code==='auth/too-many-requests')passwordResetRequests.set(key,Date.now()+60000);
+   if(passwordSessionCurrent(target))passwordActionMessage(passwordActionError(error),true);
+   return false;
+  }finally{passwordActionBusy=false;if(passwordSessionCurrent(target)){button.disabled=target.sent;if(!target.sent)button.textContent='Send reset email';}}
+ }
+ function changePasswordDialog(){
+  if(!verifiedEmail()||restoringSession||live?.auth?.currentUser!==user)return false;
+  if(passwordActionBusy){toast('Wait for the current password request to finish.',true);return false;}
+  const target={kind:'change',account:user};
+  modal('Change password',`<p class="small muted">Update the password for <strong>${esc(user.email)}</strong>.</p><form id="changeAccountPasswordForm" onsubmit="event.preventDefault();N.changeAccountPassword()"><fieldset id="changeAccountPasswordFields"><input type="email" name="username" autocomplete="username" value="${esc(user.email)}" readonly hidden><div class="field"><label for="currentAccountPassword">Current password</label><input id="currentAccountPassword" name="current-password" type="password" autocomplete="current-password" required></div><div class="field"><label for="newAccountPassword">New password</label><input id="newAccountPassword" name="new-password" type="password" autocomplete="new-password" required aria-describedby="newPasswordHelp"></div><div class="field"><label for="confirmAccountPassword">Confirm new password</label><input id="confirmAccountPassword" name="confirm-password" type="password" autocomplete="new-password" required></div><p id="newPasswordHelp" class="small muted">Use a password you do not use elsewhere. If you do not know your current password, use Forgot password on the sign-in page.</p></fieldset></form><div id="passwordActionMessage" role="status" aria-live="polite" hidden></div>`,btn('Cancel','N.close()')+`<button id="changeAccountPasswordButton" class="primary" type="submit" form="changeAccountPasswordForm">${icon('lock')}Change password</button>`);
+  passwordDialog=target;byId('currentAccountPassword').focus();return true;
+ }
+ function passwordRequirementsMessage(status){
+  const options=status.passwordPolicy?.customStrengthOptions||{},missing=[];
+  if(status.meetsMinPasswordLength===false)missing.push('at least '+(options.minPasswordLength||6)+' characters');
+  if(status.meetsMaxPasswordLength===false)missing.push('no more than '+(options.maxPasswordLength||4096)+' characters');
+  for(const [key,label] of [['containsLowercaseLetter','a lowercase letter'],['containsUppercaseLetter','an uppercase letter'],['containsNumericCharacter','a number'],['containsNonAlphanumericCharacter','a special character']])if(status[key]===false)missing.push(label);
+  return missing.length?'Your new password needs '+missing.join(', ')+'.':'The new password does not meet the account requirements. Choose a stronger password.';
+ }
+ async function changeAccountPassword(){
+  const target=passwordDialog;
+  if(target?.kind!=='change'||!passwordSessionCurrent(target)||passwordActionBusy)return false;
+  let currentPassword=byId('currentAccountPassword')?.value||'',newPassword=byId('newAccountPassword')?.value||'',confirmation=byId('confirmAccountPassword')?.value||'';
+  if(!currentPassword||!newPassword||!confirmation){passwordActionMessage('Complete all three password fields.',true);return false;}
+  if(newPassword!==confirmation){passwordActionMessage('The new passwords do not match.',true);return false;}
+  if(newPassword===currentPassword){passwordActionMessage('Choose a new password that is different from your current password.',true);return false;}
+  passwordActionBusy=true;
+  const button=byId('changeAccountPasswordButton'),fields=byId('changeAccountPasswordFields');button.disabled=true;fields.disabled=true;button.textContent='Checking password…';passwordActionMessage('');
+  try{
+   const {A,auth}=live,status=await A.validatePassword(auth,newPassword);
+   if(!passwordSessionCurrent(target))return false;
+   if(!status.isValid){passwordActionMessage(passwordRequirementsMessage(status),true);return false;}
+   await A.reauthenticateWithCredential(target.account,A.EmailAuthProvider.credential(target.account.email,currentPassword));currentPassword='';
+   if(!passwordSessionCurrent(target))return false;
+   button.textContent='Saving password…';
+   await A.updatePassword(target.account,newPassword);newPassword='';confirmation='';
+   if(passwordSessionCurrent(target)){close();toast('Your password has been changed. Use your new password next time you sign in.');}
+   return true;
+  }catch(error){if(passwordSessionCurrent(target))passwordActionMessage(passwordActionError(error),true);return false;}
+  finally{currentPassword='';newPassword='';confirmation='';passwordActionBusy=false;if(passwordSessionCurrent(target)){wipePasswordInputs();button.disabled=false;fields.disabled=false;button.textContent='Change password';}}
+ }
+
+ function account(){if(!verifiedEmail()||restoringSession){render();return;}modal('Your TBRN account',`<div class="flex" style="margin-bottom:20px"><span class="avatar" style="width:42px;height:42px;font-size:15px">${esc(user.email.slice(0,2).toUpperCase())}</span><div><strong>${esc(user.email)}</strong><div class="small muted">${isStaff()?esc(staffLevelLabel()):'Contractor · Assigned claims'}</div></div></div><div class="notice">Connected to the TBRN claims workspace.</div>`,btn('Close','N.close()')+btn('Change password','N.changePasswordDialog()','lock')+btn('Sign out','N.signOut()','lock'));}
  async function signIn(signup=false){
   if(authBusy||user||restoringSession)return;captureAuthDetails();const email=lower(authEmail),password=byId('loginPassword')?.value||'',role=authRole,remember=authRemember,name=authCompany;
   if(!email||!password){authMessage('Enter your email address and password.');return;}
@@ -1209,6 +1316,7 @@ const N = (() => {
  document.addEventListener('focusin',e=>{if(e.target.matches('[data-field],[data-cpp],[data-line]')&&canEdit())checkpoint();});
  document.addEventListener('keydown',e=>{if(!verifiedEmail()||restoringSession)return;if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();findClaim();}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveLive();}});
  byId('importFile').addEventListener('change',e=>receiveBackup(e.target.files[0]));byId('contractorImportFile').addEventListener('change',e=>receiveContractors(e.target.files[0]));
+ byId('dialog').addEventListener('cancel',event=>{event.preventDefault();close();});
  byId('dialog').addEventListener('click',e=>{if(e.target===byId('dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}});
  window.addEventListener('beforeunload',()=>persist());
  window.addEventListener('afterprint',()=>{byId('printArea').hidden=true;});
@@ -1216,7 +1324,7 @@ const N = (() => {
  window.addEventListener('storage',e=>{if(e.key===KEY&&!localTabConflict){localTabConflict=true;toast('This workspace changed in another tab. Download a backup before continuing so both copies are kept.',true);}});
  function reconnect(){return restoreSession();}
  function init(){initAppShell();try{page=sessionStorage.getItem('novaViewV5')||'overview';}catch{}if(!navItems.some(n=>n[0]===page)&&page!=='data')page='overview';restoringSession=hasSavedSession();render();persist();if(migrated&&verifiedEmail())toast('Previous local schedules recovered.');if(restoringSession)return restoreSession();}
- const api={openClaimSettings,requestClaimDeletion,confirmClaimDeletion,updateClaimDeleteConfirmation,reviewLocalClaimDrafts,openSavedClaimDraft,refreshContractorHub,refreshContractorAccess,loadContractorAccounts,contractorAccessSearch,viewContractorAccess,retryContractorClaims,closeContractorAccess,openContractorAccessClaim,retryStaffAccess,loadStaffAccounts,saveStaffLevel,init,nav,menu,close,help,account,setAuthMode,authRoleChanged,togglePassword,resetPassword,signIn,signOut,reconnect,restoreSession,sendVerification,checkVerification,saveLive,findClaim,searchClaim,newClaim,openLocal,removeLocal,loadLiveClaims,openLiveIndex,claimScope:setClaimScope,claimSearch,claimSort:setClaimSort,setRoom,roomDialog,saveRoom,deleteRoom,ratesForRoom,manualDialog,addManual,removeLine,duplicateLine,moveLine,moveLineTo,undo,redo,clearSchedule,variance,rateSearch,rateTrade,rateFavorites,rateNext,setRateRoom,favorite,addRate,toggleRateAdmin,editRate,saveRate,contractorSearch,contractorFilter,contractorDialog,saveContractor,assignDialog,assignContractor,assignmentEmail,copyEmail,openEmail,reportMode,printReport,previewCpp,exportCSV,exportBackup,exportClaim,importBackup,commitImport,recoverLegacy,importContractors,statusDialog,updateStatus,copyCompletionCode,duplicateDialog,lookupDuplicateCode,createDuplicateClaim,variationDialog,startVariation,previewScheduleVersion,printScheduleVersion,changeReportDialog,refreshChangeReport,printChangeReport};
+ const api={adminPasswordResetDialog,sendAdminPasswordReset,changePasswordDialog,changeAccountPassword,openClaimSettings,requestClaimDeletion,confirmClaimDeletion,updateClaimDeleteConfirmation,reviewLocalClaimDrafts,openSavedClaimDraft,refreshContractorHub,refreshContractorAccess,loadContractorAccounts,contractorAccessSearch,viewContractorAccess,retryContractorClaims,closeContractorAccess,openContractorAccessClaim,retryStaffAccess,loadStaffAccounts,saveStaffLevel,init,nav,menu,close,help,account,setAuthMode,authRoleChanged,togglePassword,resetPassword,signIn,signOut,reconnect,restoreSession,sendVerification,checkVerification,saveLive,findClaim,searchClaim,newClaim,openLocal,removeLocal,loadLiveClaims,openLiveIndex,claimScope:setClaimScope,claimSearch,claimSort:setClaimSort,setRoom,roomDialog,saveRoom,deleteRoom,ratesForRoom,manualDialog,addManual,removeLine,duplicateLine,moveLine,moveLineTo,undo,redo,clearSchedule,variance,rateSearch,rateTrade,rateFavorites,rateNext,setRateRoom,favorite,addRate,toggleRateAdmin,editRate,saveRate,contractorSearch,contractorFilter,contractorDialog,saveContractor,assignDialog,assignContractor,assignmentEmail,copyEmail,openEmail,reportMode,printReport,previewCpp,exportCSV,exportBackup,exportClaim,importBackup,commitImport,recoverLegacy,importContractors,statusDialog,updateStatus,copyCompletionCode,duplicateDialog,lookupDuplicateCode,createDuplicateClaim,variationDialog,startVariation,previewScheduleVersion,printScheduleVersion,changeReportDialog,refreshChangeReport,printChangeReport};
  return api;
 })();
 window.N=N;
