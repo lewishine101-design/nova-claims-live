@@ -1,0 +1,13 @@
+title: TBRN account password service
+description: Read account identities and project password policy, update passwords, and record protected audit transactions.
+stage: GA
+includedPermissions:
+  - firebaseauth.configs.get
+  - firebaseauth.users.get
+  - firebaseauth.users.update
+  - datastore.databases.get
+  - datastore.entities.get
+  - datastore.entities.create
+  - datastore.entities.update
+  - logging.logEntries.create
+  - resourcemanager.projects.get

@@ -23,7 +23,7 @@ const tick=()=>new Promise(setImmediate);
   check(level+' cannot open or invoke another account reset',()=>{assert.equal(e.T.passwordResetButton(e.staff[0],'staff'),'');assert.equal(e.calls.length,0);});
  }
  const ui=setup();
- check('Admin staff and contractor rows expose password resets with registered account IDs',()=>{assert(ui.T.staffAccessView().includes('N.adminPasswordResetDialog'));assert(ui.T.contractorAccountRows().includes('N.adminPasswordResetDialog'));assert(ui.T.passwordResetButton({id:'id" onclick="bad',email:'test@example.test'},'contractor').includes('&quot;'));});
+ check('Admin staff and contractor rows expose account settings with registered account IDs',()=>{assert(ui.T.staffAccessView().includes('N.openAccountSettings'));assert(ui.T.contractorAccountRows().includes('N.openAccountSettings'));assert(ui.T.passwordResetButton({id:'id" onclick="bad',email:'test@example.test'},'contractor').includes('&quot;'));});
  ui.N.account();check('A signed-in account menu offers Change password',()=>assert(ui.el('dialog').innerHTML.includes('N.changePasswordDialog')));
  assert.equal(ui.openAdmin('contractor'),true);
  check('Opening an admin reset displays the sign-in email and sends nothing yet',()=>{assert(ui.el('dialog').innerHTML.includes('builder@example.test'));assert(!ui.el('dialog').innerHTML.includes('different-hub-contact@example.test'));assert.equal(ui.count('reset'),0);});
