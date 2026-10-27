@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const {start,fixture}=require('./schedule-versions.cjs');
 const copy=value=>JSON.parse(JSON.stringify(value));
-const hooks=`Object.assign(api.__check,{claimDeleteButton,renderClaimRows,detailsView,loadStaffAccess,getDeletion:()=>pendingClaimDeletion,getPage:()=>page,getBusy:()=>claimDeleteBusy,setBusy:v=>{liveBusy=v;},setLiveRows:rows=>{liveRecords=rows;liveClaimsState='loaded';},setScope:value=>{claimScope=value;}});`;
+const hooks=`Object.assign(api.__check,{claimDeleteButton,claimSettingsButton,renderClaimRows,detailsView,loadStaffAccess,getDeletion:()=>pendingClaimDeletion,getPage:()=>page,getBusy:()=>claimDeleteBusy,setBusy:v=>{liveBusy=v;},setLiveRows:rows=>{liveRecords=rows;liveClaimsState='loaded';},setScope:value=>{claimScope=value;}});`;
 const initial={...copy(fixture),claimRef:'DELETE-ME',scheduleStatus:'In Progress',novaRevision:3,updatedAt:{seconds:300,nanoseconds:0}};
 initial.scheduleHistory=[{id:'saved-original',number:1,status:'TBRN Approved Schedule',savedAt:'2026-10-01T10:00:00Z',savedBy:'reviewer@tbrn.co.uk',payload:copy(fixture)}];
 function setup(role='admin'){
@@ -39,10 +39,10 @@ const checks=[];function check(name,fn){fn();checks.push(name);}
  for(const role of ['concierge','surveyor','contractor','unverified','pending','fake-admin','signed-out']){
   const e=setup(role),before=copy(e.T.store());
   assert.equal(await e.N.requestClaimDeletion('local-main'),false);assert.equal(await e.N.confirmClaimDeletion(),false);
-  check(role+' has no delete control and cannot invoke deletion directly',()=>{assert.equal(e.T.claimDeleteButton(e.T.active()),'');assert(!e.T.detailsView().includes('N.requestClaimDeletion'));assert.equal(e.reads.length,0);assert.equal(e.transactions(),0);assert.deepEqual(copy(e.T.store()),before);});
+  check(role+' has no delete control and cannot invoke deletion directly',()=>{assert.equal(e.T.claimDeleteButton(e.T.active()),'');assert.equal(e.T.claimSettingsButton(e.T.active()),'');assert.equal(e.N.openClaimSettings(null,'local-main'),false);assert(!e.T.detailsView().includes('N.openClaimSettings'));assert.equal(e.reads.length,0);assert.equal(e.transactions(),0);assert.deepEqual(copy(e.T.store()),before);});
  }
  const ui=setup();ui.T.setScope('live');ui.T.renderClaimRows();
- check('Management can delete from the live list and Claim details',()=>{assert(ui.el('claimRows').innerHTML.includes('Delete claim'));assert(ui.el('claimRows').innerHTML.includes('live-target'));assert(ui.T.detailsView().includes('N.requestClaimDeletion'));});
+ check('Management uses a settings menu in the live list and Claim details, with no prominent delete button',()=>{assert(ui.el('claimRows').innerHTML.includes('N.openClaimSettings'));assert(ui.el('claimRows').innerHTML.includes('live-target'));assert(!ui.el('claimRows').innerHTML.includes('Delete claim'));assert(ui.T.detailsView().includes('N.openClaimSettings'));assert(!ui.T.detailsView().includes('N.requestClaimDeletion'));});
  await ui.N.requestClaimDeletion('local-main');
  check('Confirmation identifies the exact claim and warns about saved versions and irreversible deletion',()=>{const html=ui.el('dialog').innerHTML;assert(html.includes('DELETE-ME'));assert(html.includes('Example claimant'));assert(html.includes('Example address'));assert(html.includes('saved schedule versions for everyone'));assert(html.includes('no undo'));assert.equal(ui.el('claimDeleteConfirmButton').disabled,true);assert.equal(ui.reads[0].id,'live-target');});
  ui.el('claimDeleteConfirmation').value='WRONG';assert.equal(await ui.N.confirmClaimDeletion(),false);
@@ -102,6 +102,6 @@ const checks=[];function check(name,fn){fn();checks.push(name);}
  const stale=setup();delete stale.database['live-target'];assert.equal(await stale.N.saveLive(),false);
  check('Saving an old cached copy cannot recreate a deleted live claim',()=>{assert(!stale.database['live-target']);assert.equal(stale.writes.length,0);assert(stale.messages.at(-1).includes('not been recreated'));});
  const malicious=setup();const dangerous=malicious.record('id" onclick="alert(1)');
- check('Delete action IDs are escaped before insertion into HTML attributes',()=>{const html=malicious.T.claimDeleteButton(dangerous);assert(!html.includes('id" onclick="alert(1)'));assert(html.includes('&quot;'));});
+ check('Delete and settings action IDs are escaped before insertion into HTML attributes',()=>{for(const html of [malicious.T.claimDeleteButton(dangerous),malicious.T.claimSettingsButton(dangerous)]){assert(!html.includes('id" onclick="alert(1)'));assert(html.includes('&quot;'));}});
  console.log(JSON.stringify({passed:checks.length,checks,productionDataTouched:false},null,2));
 })().catch(error=>{console.error(error);process.exitCode=1;});

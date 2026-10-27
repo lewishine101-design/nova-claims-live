@@ -85,7 +85,7 @@ Existing live references and document IDs are preserved. Reference lookup accept
 
 ## Deleting claims — Admin / Management
 
-Verified TBRN Admin / Management accounts can select **Delete claim** in **All claims** or **Claim details**. Other staff levels and contractors have no live-claim deletion control. The existing Firestore `claims/{claimId}` rule also permits deletion only through `admin()`; this feature requires no new rules publication.
+Verified TBRN Admin / Management accounts can open the **three-dot Claim settings menu** at the far right of a row in **All claims**, then select **Delete claim**. The same menu sits beside Save in **Claim details**. Delete is hidden until this menu is opened; its existing typed confirmation is still required. The menu supports keyboard operation and closes when clicking elsewhere, pressing Escape, scrolling, changing pages or losing admin access. Other staff levels and contractors have no claim settings or live-claim deletion control. The existing Firestore `claims/{claimId}` rule also permits deletion only through `admin()`; this feature requires no new rules publication.
 
 The confirmation loads the current claim from the server, displays its reference, claimant, property and saved-version count, and requires the displayed reference to be typed. A transaction checks that the exact document has not changed since that confirmation before deleting it. Closing the dialog, changing accounts, losing the admin role, failing a server read or receiving a permission error prevents an unconfirmed deletion. An active live save and duplicate confirmation clicks are guarded.
 

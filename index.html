@@ -40,6 +40,17 @@
 .contractor-hub-notice{margin-bottom:18px;align-items:center;justify-content:space-between;gap:16px}.contractor-hub-notice>div{min-width:0}.contractor-hub-notes{white-space:pre-wrap;margin-top:7px;max-width:280px;overflow-wrap:anywhere}#contractorAccountRows td{vertical-align:top}#contractorAccountRows .badge{white-space:normal}
 .local-claim-draft-notice{margin-bottom:18px;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .claim-delete-summary{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 16px;margin:20px 0}.claim-delete-summary dt{color:var(--muted)}.claim-delete-summary dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:520px){.claim-delete-summary{grid-template-columns:1fr;gap:4px}.claim-delete-summary dd{margin-bottom:8px}}
+.claim-actions-cell{width:1%;white-space:nowrap}
+.claim-row-actions{justify-content:flex-end;flex-wrap:nowrap}
+.claim-settings-toggle{color:var(--muted);width:36px;height:36px;margin-left:4px}
+.claim-settings-toggle:hover,.claim-settings-toggle[aria-expanded="true"]{background:#edf3ef;color:var(--ink);border-color:var(--line)}
+.claim-settings-menu{position:fixed;z-index:80;width:190px;max-width:calc(100vw - 16px);padding:6px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 28px #173c3326}
+.claim-settings-heading{padding:7px 10px 9px;font-size:11px;font-weight:600;color:var(--muted)}
+.claim-settings-menu button{display:flex;justify-content:flex-start;width:100%;min-height:40px;padding:10px;border:0;background:transparent;border-radius:6px;font-size:12px}
+.claim-settings-menu button:hover,.claim-settings-menu button:focus-visible{background:#fff1ef}
+@media(max-width:600px){.claim-settings-toggle{width:44px;height:44px}.claim-settings-menu button{min-height:44px}}
+@media print{.claim-settings-menu{display:none!important}}
+
 </style>
 </head>
 <body class="auth-screen">
@@ -57,6 +68,7 @@
  <main class="content" id="content"></main>
 </div>
 </div>
+<div id="claimSettingsMenu" class="claim-settings-menu" role="menu" aria-label="Claim settings" hidden></div>
 <dialog class="modal" id="dialog" aria-labelledby="dialogTitle"></dialog>
 <div class="toast-area" id="toastArea" role="status" aria-live="polite"></div>
 <div id="printArea" hidden></div>
@@ -128,6 +140,7 @@ const N = (() => {
  print:'<path d="M7 8V3h10v5M7 17H3V8h18v9h-4M7 14h10v7H7z"/>',
  lock:'<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V6a4 4 0 0 1 8 0v4M12 14v3"/>'
  };
+ I.more='<circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/>';
  const icon=name=>`<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">${I[name]||I.file}</svg>`;
  function icons(){document.querySelectorAll('[data-icon]').forEach(el=>{el.outerHTML=icon(el.dataset.icon);});}
  const navItems=[['overview','grid','Overview'],['claims','file','My claims'],['details','list','Claim details'],['schedule','room','Repair schedule'],['rates','book','Rate library'],['contractors','people','Contractor directory'],['report','file','Reports'],['cpp','shield','Construction plan'],['staff','people','Staff access'],['contractor-access','lock','Contractor access']];
@@ -520,7 +533,7 @@ const N = (() => {
   }
  }
 
- function modal(title,body,footer='',wide=false){pendingClaimDeletion=null;dataAdminDialogOpen=false;lastFocus=document.activeElement;const d=byId('dialog');if(d.open)d.close();d.classList.toggle('wide',wide);d.innerHTML=`<div class="modal-head"><h2 id="dialogTitle">${esc(title)}</h2><button class="icon-btn ghost" aria-label="Close dialog" onclick="N.close()">${icon('close')}</button></div><div class="modal-content">${body}</div>${footer?`<div class="modal-foot">${footer}</div>`:''}`;d.showModal();}
+ function modal(title,body,footer='',wide=false){closeClaimSettings(true);pendingClaimDeletion=null;dataAdminDialogOpen=false;lastFocus=document.activeElement;const d=byId('dialog');if(d.open)d.close();d.classList.toggle('wide',wide);d.innerHTML=`<div class="modal-head"><h2 id="dialogTitle">${esc(title)}</h2><button class="icon-btn ghost" aria-label="Close dialog" onclick="N.close()">${icon('close')}</button></div><div class="modal-content">${body}</div>${footer?`<div class="modal-foot">${footer}</div>`:''}`;d.showModal();}
  function close(){pendingClaimDeletion=null;dataAdminDialogOpen=false;byId('dialog').close();lastFocus?.focus?.();}
  function menu(open){byId('sidebar').classList.toggle('open',open);byId('mobileScrim').classList.toggle('open',open);}
  function badge(s){const i=statuses.indexOf(cleanStatus(s)),col=i===0?'':i===1?'blue':i===2?'amber':'sage';return `<span class="badge ${col}">${esc(statusShort[i]||s)}</span>`;}
@@ -539,7 +552,7 @@ const N = (() => {
   document.querySelectorAll('[id^="pcRate"],[id^="rateQty"]').forEach(el=>el.disabled=true);
  }
 
- function render(){if(restoringSession||!verifiedEmail()){renderAuthHome();return;}showAuthSurface(false);byId('authHome').innerHTML='';if(!canView(page))page='overview';ensureCompletionCode();top();const views={overview:overviewView,claims:claimsView,details:detailsView,schedule:scheduleView,rates:ratesView,contractors:contractorsView,report:reportView,cpp:cppView,data:dataView,staff:staffAccessView,'contractor-access':contractorAccessView},needsClaim=claimViews.has(page)&&!canAccess(claim());byId('content').innerHTML=staffAccessNotice()+(needsClaim?head('Open an assigned claim','Find your claim by reference to work on its schedule.',btn('Find claim','N.findClaim()','search','primary'))+empty('No assigned claim is open','Your account can work on claims assigned to your email address.',btn('My claims',"N.nav('claims')",'file')):views[page]())+footer();icons();updateSaveHint();applyRoleControls();if(page==='rates'&&!needsClaim)renderRateRows();if(page==='contractors')renderContractorRows();if(page==='claims')renderClaimRows();if(page==='contractor-access'){contractorAccessSearch(contractorAccountsQuery);if(contractorAccountsState==='idle')loadContractorAccounts();if(contractorHubState==='idle')startContractorHub();}}
+ function render(){closeClaimSettings();if(restoringSession||!verifiedEmail()){renderAuthHome();return;}showAuthSurface(false);byId('authHome').innerHTML='';if(!canView(page))page='overview';ensureCompletionCode();top();const views={overview:overviewView,claims:claimsView,details:detailsView,schedule:scheduleView,rates:ratesView,contractors:contractorsView,report:reportView,cpp:cppView,data:dataView,staff:staffAccessView,'contractor-access':contractorAccessView},needsClaim=claimViews.has(page)&&!canAccess(claim());byId('content').innerHTML=staffAccessNotice()+(needsClaim?head('Open an assigned claim','Find your claim by reference to work on its schedule.',btn('Find claim','N.findClaim()','search','primary'))+empty('No assigned claim is open','Your account can work on claims assigned to your email address.',btn('My claims',"N.nav('claims')",'file')):views[page]())+footer();icons();updateSaveHint();applyRoleControls();if(page==='rates'&&!needsClaim)renderRateRows();if(page==='contractors')renderContractorRows();if(page==='claims')renderClaimRows();if(page==='contractor-access'){contractorAccessSearch(contractorAccountsQuery);if(contractorAccountsState==='idle')loadContractorAccounts();if(contractorHubState==='idle')startContractorHub();}}
  function empty(title,desc,action='',ico='file'){return `<div class="empty"><div class="empty-icon">${icon(ico)}</div><h3>${title}</h3><p>${desc}</p>${action}</div>`;}
  function steps(){const current=statuses.indexOf(claim().scheduleStatus);return `<div class="progress-track">${statusShort.map((s,i)=>`<div class="progress-step ${i<current?'done':i===current?'current':''}"><i></i><span>${i+1}. ${s}</span></div>`).join('')}</div>`;}
  function metric(label,value,note,ico,feature=false){return `<div class="card metric ${feature?'feature':''}"><span class="metric-icon">${icon(ico)}</span><label>${label}</label><strong>${value}</strong><small>${note}</small></div>`;}
@@ -550,7 +563,7 @@ const N = (() => {
  <div class="notice section-space flex">${icon('shield')}<span>Drafts save automatically in this browser. ${user?'Use <strong>Save to live</strong> when your changes are ready to share.':'Sign in to open and update your existing live claims.'}</span></div>`;}
  function field(id,label,type='text',placeholder='',extra=''){const v=claim()[id]??'';if(['surveyorNotes','regionalVariance','vat'].includes(id)&&!canEditSchedule())extra+=' readonly';if(user&&!isStaff()&&['claimRef','claimantName','propertyAddress'].includes(id))extra+=' readonly';return `<div class="field"><label for="${id}">${label}</label>${type==='textarea'?`<textarea id="${id}" data-field="${id}" placeholder="${esc(placeholder)}" ${extra}>${esc(v)}</textarea>`:`<input id="${id}" data-field="${id}" type="${type}" value="${esc(v)}" placeholder="${esc(placeholder)}" ${extra}>`}</div>`;}
  function tbrnAssignmentFields(){const required=needsTbrnAssignments(claim(),active().remote?claim():null);return tbrnAssignments.map(([key,label])=>field(key,label+(required?' <span class="muted" aria-hidden="true">*</span>':''),'text',isStaff()?"Enter staff member’s name":'Not assigned',`${!canManage()?'readonly':''} ${required?'required aria-required="true"':''} maxlength="120" aria-describedby="tbrnAssignmentHelp"`)).join('')+`<p id="tbrnAssignmentHelp" class="small muted" style="margin-bottom:0">${isStaff()?(required?'Both TBRN roles must be assigned before saving this claim to live.':'Assign the TBRN team responsible for this claim.'):user?'TBRN staff manage these assignments.':'Sign in as TBRN staff to assign the claim team.'}</p>`;}
- function detailsView(){const p=claim(),types=['Impact Damage','Escape of Water','Fire / Smoke','Storm Damage','Subsidence','Other'];if(!types.includes(p.claimType))types.push(p.claimType);return head('Claim details','The people, property and instructions behind this repair.',claimDeleteButton(active())+saveButton())+localClaimDraftNotice()+completionCodePanel()+scheduleVersionsPanel()+
+ function detailsView(){const p=claim(),types=['Impact Damage','Escape of Water','Fire / Smoke','Storm Damage','Subsidence','Other'];if(!types.includes(p.claimType))types.push(p.claimType);return head('Claim details','The people, property and instructions behind this repair.',saveButton()+claimSettingsButton(active()))+localClaimDraftNotice()+completionCodePanel()+scheduleVersionsPanel()+
  `<div class="details-grid"><div class="card"><div class="card-head"><div><h2>Property &amp; claimant</h2><p>Core details appear on your schedule and reports.</p></div>${icon('file')}</div><div class="card-body"><fieldset ${!canEdit()?'disabled':''}><div class="grid2">${field('claimRef','Claim reference','text','e.g. [2321678]',active().remote?'readonly title="Live claim references cannot be changed"':'')}${field('claimantName','Claimant / policyholder','text','Full name')}</div>${field('propertyAddress','Property address','textarea','Full property address and postcode')}<div class="field"><label for="claimType">Claim type</label><select id="claimType" data-field="claimType" ${user&&!isStaff()?'disabled':''}>${types.map(v=>`<option ${p.claimType===v?'selected':''}>${esc(v)}</option>`).join('')}</select></div><div class="subsection">${field('surveyorNotes','Scope & surveyor notes','textarea','Reinstatement requirements, access and specification')}</div></fieldset></div></div>
  <div><div class="card"><div class="card-head"><div><h2>Assignment &amp; progress</h2><p>Assign the TBRN team and manage progress.</p></div>${badge(p.scheduleStatus)}</div><div class="card-body">${tbrnAssignmentFields()}<div class="subsection"><label>Assigned contractor</label><div class="notice">${esc(p.assignedContractorName||p.assignedContractor||'No contractor assigned')}<div class="small muted">${esc(p.assignedContractorName?p.assignedContractor:'Choose a contractor from the directory.')}</div></div><div class="actions">${canManage()?btn('Choose contractor',"N.nav('contractors')",'people','sm'):''}${p.assignedContractor?btn('Email draft','N.assignmentEmail()','mail','sm'):''}</div></div><div class="subsection"><label>Current stage</label><div class="flex between">${badge(p.scheduleStatus)}${canWorkSchedule()?btn('Update status','N.statusDialog()','edit','sm'):''}</div></div></div></div>
  <div class="card section-space"><div class="card-head"><div><h2>Pricing adjustments</h2><p>Applied to the net schedule total.</p></div></div><div class="card-body"><fieldset ${!canEditSchedule()?'disabled':''}><label>Regional variance preset</label><div class="segmented" style="margin-bottom:17px">${[0,15,30].map(n=>btn(n+'%',`N.variance(${n})`,'',num(p.regionalVariance)===n?'active':'')).join('')}</div><div class="grid2">${field('regionalVariance','Regional variance %','number','0','step="0.1" min="-100"')}${field('vat','VAT %','number','20','step="0.1" min="0"')}</div></fieldset><div class="small muted">The original calculation is retained: net + regional variance, then VAT.</div></div></div></div></div>`;}
@@ -692,7 +705,7 @@ const N = (() => {
   const text=lower([p.claimRef,p.claimantName,p.propertyAddress].join(' ')),term=lower(query);
   return !term||term.split(/\s+/).every(word=>text.includes(word))||(norm(term).length>0&&norm(text).includes(norm(term)));
  }
- function renderClaimRows(){
+ function renderClaimRows(){closeClaimSettings();
   const b=byId('claimRows');if(!b)return;
   const shared=claimScope==='live',staff=isStaff(),status=byId('claimSearchStatus');
   const notice=(title,description,action='',label=title)=>{b.innerHTML=`<tr><td colspan="5">${empty(esc(title),esc(description),action,'file')}</td></tr>`;if(status)status.textContent=label;};
@@ -708,7 +721,7 @@ const N = (() => {
   rows.sort((a,b)=>claimSort==='reference'?String(a.payload.claimRef).localeCompare(String(b.payload.claimRef)):claimSort==='value'?totals(b.payload).gross-totals(a.payload).gross:new Date(b.updatedAt)-new Date(a.updatedAt));
   const count=rows.length+' of '+records.length+(shared?' live claims':' saved claims');
   if(!rows.length){notice(claimQuery?'No matching claims':shared?'No live claims saved':'No saved claims',claimQuery?'Try another reference, claimant, address or postcode.':shared?'Claims appear here after they have been saved to live.':'Local drafts are only available on this computer.',claimQuery?btn('Clear search',"N.claimSearch('')",'search'):shared?btn('Refresh','N.loadLiveClaims()','refresh'):'',count);return;}
-  b.innerHTML=rows.map(c=>`<tr><td><div class="row-title">${esc(c.payload.claimRef||'Untitled claim')}</div><div class="row-subtitle">${esc(c.payload.claimantName||'No claimant')} · ${esc(c.payload.propertyAddress||'No address')}</div></td><td>${shared?badge(c.payload.scheduleStatus):localClaimStatus(c)}</td><td class="num">${money(totals(c.payload).gross)}</td><td class="small muted">${time(c.updatedAt)}</td><td><div class="actions">${btn('Open',!shared?`N.openLocal('${c.id}')`:`N.openLiveIndex(${liveRecords.indexOf(c)})`,'arrow','sm')}${!shared?localClaimDraftAction(c)+(c.remote?.id?btn('Remove local copy',`N.removeLocal('${c.id}')`,'','sm ghost'):''):''}${claimDeleteButton(c,shared)}</div></td></tr>`).join('');
+  b.innerHTML=rows.map(c=>`<tr><td><div class="row-title">${esc(c.payload.claimRef||'Untitled claim')}</div><div class="row-subtitle">${esc(c.payload.claimantName||'No claimant')} · ${esc(c.payload.propertyAddress||'No address')}</div></td><td>${shared?badge(c.payload.scheduleStatus):localClaimStatus(c)}</td><td class="num">${money(totals(c.payload).gross)}</td><td class="small muted">${time(c.updatedAt)}</td><td class="claim-actions-cell"><div class="actions claim-row-actions">${btn('Open',!shared?`N.openLocal('${c.id}')`:`N.openLiveIndex(${liveRecords.indexOf(c)})`,'arrow','sm')}${!shared?localClaimDraftAction(c)+(c.remote?.id?btn('Remove local copy',`N.removeLocal('${c.id}')`,'','sm ghost'):''):''}${claimSettingsButton(c,shared)}</div></td></tr>`).join('');
   if(status)status.textContent=count;
  }
  function setClaimScope(v){if(!['local','live'].includes(v))return;claimScope=v;render();}
@@ -716,12 +729,58 @@ const N = (() => {
  function setClaimSort(v){claimSort=v;renderClaimRows();}
  // Destructive claim actions require a server-confirmed management role and an explicit target.
  let pendingClaimDeletion=null,claimDeleteBusy=false;
+ // Claim settings stay separate from the primary Open action.
+ let claimSettingsTarget=null;
+ function claimSettingsButton(record,shared=false){
+  if(!canAdmin()||!record||!canAccess(record.payload))return '';
+  const action='N.openClaimSettings(this,'+JSON.stringify(record.id)+','+shared+')';
+  return `<button type="button" class="icon-btn ghost claim-settings-toggle" aria-label="Settings for ${esc(record.payload.claimRef||'untitled claim')}" title="Claim settings" aria-haspopup="menu" aria-expanded="false" aria-controls="claimSettingsMenu" onclick="${esc(action)}">${icon('more')}</button>`;
+ }
+ function closeClaimSettings(restoreFocus=false){
+  const target=claimSettingsTarget;if(!target)return;
+  claimSettingsTarget=null;
+  const menu=byId('claimSettingsMenu');menu.hidden=true;menu.innerHTML='';
+  target.trigger.setAttribute('aria-expanded','false');
+  if(restoreFocus&&target.trigger.isConnected)target.trigger.focus({preventScroll:true});
+ }
+ function openClaimSettings(trigger,recordId,shared=false){
+  if(!canAdmin()){closeClaimSettings();return false;}
+  const record=(shared===true?liveRecords:store.claims).find(r=>r.id===recordId);
+  if(!record||!canAccess(record.payload)||!trigger?.isConnected){closeClaimSettings();return false;}
+  const wasOpen=claimSettingsTarget?.trigger===trigger;closeClaimSettings();if(wasOpen)return false;
+  const menu=byId('claimSettingsMenu');
+  menu.innerHTML='<div class="claim-settings-heading" role="presentation">Claim settings</div>'+claimDeleteButton(record,shared).replace('<button ','<button role="menuitem" ');
+  menu.setAttribute('aria-label','Settings for '+(record.payload.claimRef||'untitled claim'));
+  claimSettingsTarget={trigger};trigger.setAttribute('aria-expanded','true');
+  menu.hidden=false;
+  const anchor=trigger.getBoundingClientRect(),box=menu.getBoundingClientRect(),width=document.documentElement.clientWidth,height=document.documentElement.clientHeight;
+  menu.style.left=Math.max(8,Math.min(anchor.right-box.width,width-box.width-8))+'px';
+  menu.style.top=Math.max(8,anchor.bottom+6+box.height<=height-8?anchor.bottom+6:anchor.top-box.height-6)+'px';
+  menu.querySelector('[role="menuitem"]').focus({preventScroll:true});return true;
+ }
+ document.addEventListener('click',event=>{
+  const target=claimSettingsTarget;
+  if(target&&!byId('claimSettingsMenu').contains(event.target)&&!target.trigger.contains(event.target))closeClaimSettings();
+ });
+ document.addEventListener('keydown',event=>{
+  if(!claimSettingsTarget){
+   const trigger=event.target.closest?.('.claim-settings-toggle');
+   if(trigger&&['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();trigger.click();}
+   return;
+  }
+  if(event.key==='Escape'){event.preventDefault();closeClaimSettings(true);}
+  else if(event.key==='Tab')closeClaimSettings(true);
+  else if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){event.preventDefault();byId('claimSettingsMenu').querySelector('[role="menuitem"]').focus();}
+ });
+ document.addEventListener('scroll',()=>closeClaimSettings(),true);
+ window.addEventListener('resize',()=>closeClaimSettings());
+
  function claimDeleteButton(record,shared=false){
   if(!canAdmin()||!record||!canAccess(record.payload))return '';
   const action='N.requestClaimDeletion('+JSON.stringify(record.id)+','+shared+')';
   return btn(shared||record.remote?.id?'Delete claim':'Delete draft',esc(action),'trash','danger sm');
  }
- function clearClaimDeletionAccess(){
+ function clearClaimDeletionAccess(){closeClaimSettings();
   if(pendingClaimDeletion){pendingClaimDeletion=null;byId('dialog').close();byId('dialog').innerHTML='';}
  }
  function claimDeletionCurrent(target){
@@ -739,6 +798,7 @@ const N = (() => {
   pendingClaimDeletion=target;target.ready=true;updateClaimDeleteConfirmation();byId('claimDeleteConfirmation').focus();
  }
  async function requestClaimDeletion(recordId=store.activeId,shared=false){
+  closeClaimSettings(true);
   if(!canAdmin()){toast('Only TBRN Admin / Management can delete claims.',true);return false;}
   if(liveBusy||claimDeleteBusy){toast('Wait for the current live operation to finish.',true);return false;}
   const record=(shared===true?liveRecords:store.claims).find(r=>r.id===recordId);
@@ -1156,7 +1216,7 @@ const N = (() => {
  window.addEventListener('storage',e=>{if(e.key===KEY&&!localTabConflict){localTabConflict=true;toast('This workspace changed in another tab. Download a backup before continuing so both copies are kept.',true);}});
  function reconnect(){return restoreSession();}
  function init(){initAppShell();try{page=sessionStorage.getItem('novaViewV5')||'overview';}catch{}if(!navItems.some(n=>n[0]===page)&&page!=='data')page='overview';restoringSession=hasSavedSession();render();persist();if(migrated&&verifiedEmail())toast('Previous local schedules recovered.');if(restoringSession)return restoreSession();}
- const api={requestClaimDeletion,confirmClaimDeletion,updateClaimDeleteConfirmation,reviewLocalClaimDrafts,openSavedClaimDraft,refreshContractorHub,refreshContractorAccess,loadContractorAccounts,contractorAccessSearch,viewContractorAccess,retryContractorClaims,closeContractorAccess,openContractorAccessClaim,retryStaffAccess,loadStaffAccounts,saveStaffLevel,init,nav,menu,close,help,account,setAuthMode,authRoleChanged,togglePassword,resetPassword,signIn,signOut,reconnect,restoreSession,sendVerification,checkVerification,saveLive,findClaim,searchClaim,newClaim,openLocal,removeLocal,loadLiveClaims,openLiveIndex,claimScope:setClaimScope,claimSearch,claimSort:setClaimSort,setRoom,roomDialog,saveRoom,deleteRoom,ratesForRoom,manualDialog,addManual,removeLine,duplicateLine,moveLine,moveLineTo,undo,redo,clearSchedule,variance,rateSearch,rateTrade,rateFavorites,rateNext,setRateRoom,favorite,addRate,toggleRateAdmin,editRate,saveRate,contractorSearch,contractorFilter,contractorDialog,saveContractor,assignDialog,assignContractor,assignmentEmail,copyEmail,openEmail,reportMode,printReport,previewCpp,exportCSV,exportBackup,exportClaim,importBackup,commitImport,recoverLegacy,importContractors,statusDialog,updateStatus,copyCompletionCode,duplicateDialog,lookupDuplicateCode,createDuplicateClaim,variationDialog,startVariation,previewScheduleVersion,printScheduleVersion,changeReportDialog,refreshChangeReport,printChangeReport};
+ const api={openClaimSettings,requestClaimDeletion,confirmClaimDeletion,updateClaimDeleteConfirmation,reviewLocalClaimDrafts,openSavedClaimDraft,refreshContractorHub,refreshContractorAccess,loadContractorAccounts,contractorAccessSearch,viewContractorAccess,retryContractorClaims,closeContractorAccess,openContractorAccessClaim,retryStaffAccess,loadStaffAccounts,saveStaffLevel,init,nav,menu,close,help,account,setAuthMode,authRoleChanged,togglePassword,resetPassword,signIn,signOut,reconnect,restoreSession,sendVerification,checkVerification,saveLive,findClaim,searchClaim,newClaim,openLocal,removeLocal,loadLiveClaims,openLiveIndex,claimScope:setClaimScope,claimSearch,claimSort:setClaimSort,setRoom,roomDialog,saveRoom,deleteRoom,ratesForRoom,manualDialog,addManual,removeLine,duplicateLine,moveLine,moveLineTo,undo,redo,clearSchedule,variance,rateSearch,rateTrade,rateFavorites,rateNext,setRateRoom,favorite,addRate,toggleRateAdmin,editRate,saveRate,contractorSearch,contractorFilter,contractorDialog,saveContractor,assignDialog,assignContractor,assignmentEmail,copyEmail,openEmail,reportMode,printReport,previewCpp,exportCSV,exportBackup,exportClaim,importBackup,commitImport,recoverLegacy,importContractors,statusDialog,updateStatus,copyCompletionCode,duplicateDialog,lookupDuplicateCode,createDuplicateClaim,variationDialog,startVariation,previewScheduleVersion,printScheduleVersion,changeReportDialog,refreshChangeReport,printChangeReport};
  return api;
 })();
 window.N=N;
